@@ -28,7 +28,7 @@
 <meta property="og:description" content="addr2line是一个将地址转换为文件名和行号的工具。给定可执行文件(如exe&#x2F;a.out等)中的地址或可重定位对象(如so,ko等)部分中的偏移量，它会使用调试信息来确定与之相关的文件名和行数。 用户态coredump，一般使用gdb调试接口，gdb一般封装了addr2line，可以解析文件名和行号。如果环境配置了不生成coredump，可以使用addr2line调试。所以addr2">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-11-10T14:39:55.000Z">
-<meta property="article:modified_time" content="2024-11-10T14:47:23.992Z">
+<meta property="article:modified_time" content="2024-11-10T15:11:33.717Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Linux工具">
 <meta name="twitter:card" content="summary">
@@ -109,7 +109,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Linux%E5%B7%A5%E5%85%B7/">Linux工具</a></div><div id="tag"> <span>&nbsp标签：</span><a class="cap breadcrumb-link" href="/tags/Linux%E5%B7%A5%E5%85%B7/">Linux工具</a>&nbsp</div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-10T14:39:55.000Z">2024-11-10</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-10T14:47:23.992Z">2024-11-10</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-10T14:39:55.000Z">2024-11-10</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-10T15:11:33.717Z">2024-11-10</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -153,7 +153,11 @@
 <td>以好读的方式显示</td>
 </tr>
 <tr>
-<td>需要注意的是使用addr2line的时候，可执行文件或重定位文件一定是要带调试信息的</td>
+<td>需要注意的是使用addr2line的时候，</td>
+<td></td>
+</tr>
+<tr>
+<td>可执行文件或重定位文件一定是要带调试信息的</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -197,7 +201,7 @@
 <p>为什么这条信息关键? 因为其含有指令指针RIP；指令指针IP&#x2F;EIP&#x2F;RIP的基本功能是指向要执行的下一条地址。在8080 8位微处理器上的寄存器名称是PC（program counter，程序计数器），从8086起，被称为IP（instruction pointer，指令指针）。主要区别在与PC指向正在执行的指令，而IP指向下一条指令。在64位模式下，指令指针是RIP寄存器。这个寄存器保存着下一条要执行的指令的64位地址偏移量。64位模式支持一种新的寻址模式，被称为RIP相对寻址。使用这个模式，有效地址的计算方式变为RIP（指向下一条指令）加上位移量。</p>
 <p>由此可以看出内核执行到do_oops+0x5&#x2F;0x11这个地址的时候出现异常，我们只需要找到这个地址对应的代码即可。</p>
 <p>do_oops指示了是在do_oops函数中出现的异常， 0x5表示出错的地址偏移量， 0x11表示do_oops函数的大小。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">打印格式：do_oops+<span class="hljs-number">0x5</span>/<span class="hljs-number">0x11</span> [oops] <br>即：symbol+offset/size [module] symbol: 符号 offset：地址偏移量 size：函数的长度 module: 所属内核模块<br></code></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">打印格式：do_oops+<span class="hljs-number">0x5</span>/<span class="hljs-number">0x11</span> [oops] <br>即：symbol+offset/size [module] <br>symbol: 符号 offset：地址偏移量 size：函数的长度 module: 所属内核模块<br></code></pre></td></tr></table></figure>
 
 <p>使用如下命令解析</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">addr2line -e oops.ko <span class="hljs-number">0x5</span> -f -p<br></code></pre></td></tr></table></figure>
