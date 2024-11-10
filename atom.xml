@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>mengchao666</title>
+  
+  
+  <link href="http://example.com/atom.xml" rel="self"/>
+  
+  <link href="http://example.com/"/>
+  <updated>2024-11-10T06:49:58.330Z</updated>
+  <id>http://example.com/</id>
+  
+  <author>
+    <name>John Doe</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>test</title>
+    <link href="http://example.com/posts/1.html"/>
+    <id>http://example.com/posts/1.html</id>
+    <published>2024-09-17T04:38:23.000Z</published>
+    <updated>2024-11-10T06:49:58.330Z</updated>
+    
+    <content type="html"><![CDATA[<p>我是mengchao666.github.io</p><h2 id="你好"><a href="#你好" class="headerlink" title="你好"></a>你好</h2><p>test 666</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;我是mengchao666.github.io&lt;/p&gt;
+&lt;h2 id=&quot;你好&quot;&gt;&lt;a href=&quot;#你好&quot; class=&quot;headerlink&quot; title=&quot;你好&quot;&gt;&lt;/a&gt;你好&lt;/h2&gt;&lt;p&gt;test 666&lt;/p&gt;
+</summary>
+      
+    
+    
+    
+    <category term="测试" scheme="http://example.com/categories/%E6%B5%8B%E8%AF%95/"/>
+    
+    
+    <category term="test" scheme="http://example.com/tags/test/"/>
+    
+  </entry>
+  
+</feed>
