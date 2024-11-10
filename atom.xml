@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2024-11-10T12:52:56.483Z</updated>
+  <updated>2024-11-10T12:57:08.115Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -21,9 +21,9 @@
     <link href="http://example.com/posts/1.html"/>
     <id>http://example.com/posts/1.html</id>
     <published>2024-11-10T07:38:23.000Z</published>
-    <updated>2024-11-10T12:52:56.483Z</updated>
+    <updated>2024-11-10T12:57:08.115Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="一、网站部署"><a href="#一、网站部署" class="headerlink" title="一、网站部署"></a>一、网站部署</h2><p>1、首先在github上创建自己的一个仓库，仓库名字为mengchao666.github.io</p><p>2、将<a href="https://github.com/struggle-upwards/stellar-blog-demo">https://github.com/struggle-upwards/stellar-blog-demo</a>代码下载到本地，用VScode打开</p><p>3、安装node.js，pnpm，hexo</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">node.js官网安装：https://nodejs.cn/download/<br>pnpm安装：npm install pnpm -g<br>hexo安装：npm install hexo-cli -g<br></code></pre></td></tr></table></figure><p>4、在Vscode打开的项目终端下执行如下命令：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">pnpm i<br>pnpm dev<br></code></pre></td></tr></table></figure><p>5、使用hexo deploy命令部署，打开mengchao666.github.io即可</p><p>6、新增文章后，使用命令部署提交到github</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">hexo clean<br>hexo deploy<br></code></pre></td></tr></table></figure>]]></content>
+    <content type="html"><![CDATA[<h2 id="一、网站部署"><a href="#一、网站部署" class="headerlink" title="一、网站部署"></a>一、网站部署</h2><p>1、首先在github上创建自己的一个仓库，仓库名字为mengchao666.github.io</p><p>2、将<a href="https://github.com/mengchao666/mengchao666.github.io">https://github.com/mengchao666/mengchao666.github.io</a>代码下载到本地，用VScode打开</p><p>3、安装node.js，pnpm，hexo</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">node.js官网安装：https://nodejs.cn/download/<br>pnpm安装：npm install pnpm -g<br>hexo安装：npm install hexo-cli -g<br></code></pre></td></tr></table></figure><p>4、在Vscode打开的项目终端下执行如下命令：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">pnpm i<br>pnpm dev<br></code></pre></td></tr></table></figure><p>5、使用hexo deploy命令部署，打开mengchao666.github.io即可</p><p>6、新增文章后，使用命令部署提交到github</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">hexo clean<br>hexo deploy<br></code></pre></td></tr></table></figure>]]></content>
     
     
       
