@@ -2,11 +2,11 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>mengchao666</title>
   
-  
+  <subtitle>个人记录</subtitle>
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2024-11-10T06:49:58.330Z</updated>
+  <updated>2024-11-10T07:27:27.195Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -17,28 +17,52 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>test</title>
+    <title>个人博客网站记录</title>
     <link href="http://example.com/posts/1.html"/>
     <id>http://example.com/posts/1.html</id>
-    <published>2024-09-17T04:38:23.000Z</published>
-    <updated>2024-11-10T06:49:58.330Z</updated>
+    <published>2024-11-10T07:38:23.000Z</published>
+    <updated>2024-11-10T07:27:27.195Z</updated>
     
-    <content type="html"><![CDATA[<p>我是mengchao666.github.io</p><h2 id="你好"><a href="#你好" class="headerlink" title="你好"></a>你好</h2><p>test 666</p>]]></content>
+    <content type="html"><![CDATA[<h2 id="一、网站部署"><a href="#一、网站部署" class="headerlink" title="一、网站部署"></a>一、网站部署</h2><p>1、首先在github上创建自己的一个仓库，仓库名字为mengchao666.github.io</p><p>2、将<a href="https://github.com/struggle-upwards/stellar-blog-demo">https://github.com/struggle-upwards/stellar-blog-demo</a>代码下载到本地，用VScode打开</p><p>3、安装node.js，pnpm，hexo</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">node.js官网安装：https://nodejs.cn/download/<br>pnpm安装：npm install pnpm -g<br>hexo安装：npm install hexo-cli -g<br></code></pre></td></tr></table></figure><p>4、在Vscode打开的项目终端下执行如下命令：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">pnpm i<br>pnpm dev<br></code></pre></td></tr></table></figure><p>5、使用hexo deploy命令部署，打开mengchao666.github.io即可</p><p>6、新增文章后，继续使用hexo deploy命令部署</p>]]></content>
     
     
       
       
-    <summary type="html">&lt;p&gt;我是mengchao666.github.io&lt;/p&gt;
-&lt;h2 id=&quot;你好&quot;&gt;&lt;a href=&quot;#你好&quot; class=&quot;headerlink&quot; title=&quot;你好&quot;&gt;&lt;/a&gt;你好&lt;/h2&gt;&lt;p&gt;test 666&lt;/p&gt;
-</summary>
+    <summary type="html">&lt;h2 id=&quot;一、网站部署&quot;&gt;&lt;a href=&quot;#一、网站部署&quot; class=&quot;headerlink&quot; title=&quot;一、网站部署&quot;&gt;&lt;/a&gt;一、网站部署&lt;/h2&gt;&lt;p&gt;1、首先在github上创建自己的一个仓库，仓库名字为mengchao666.github.io&lt;/p&gt;
+&lt;</summary>
       
     
     
     
-    <category term="测试" scheme="http://example.com/categories/%E6%B5%8B%E8%AF%95/"/>
+    <category term="网站" scheme="http://example.com/categories/%E7%BD%91%E7%AB%99/"/>
     
     
-    <category term="test" scheme="http://example.com/tags/test/"/>
+    <category term="网站" scheme="http://example.com/tags/%E7%BD%91%E7%AB%99/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>个人博客网站记录</title>
+    <link href="http://example.com/posts/1.html"/>
+    <id>http://example.com/posts/1.html</id>
+    <published>2024-11-10T07:38:23.000Z</published>
+    <updated>2024-11-10T12:43:00.719Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="一、网站部署"><a href="#一、网站部署" class="headerlink" title="一、网站部署"></a>一、网站部署</h2><p>1、首先在github上创建自己的一个仓库，仓库名字为mengchao666.github.io</p><p>2、将<a href="https://github.com/struggle-upwards/stellar-blog-demo">https://github.com/struggle-upwards/stellar-blog-demo</a>代码下载到本地，用VScode打开</p><p>3、安装node.js，pnpm，hexo</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">node.js官网安装：https://nodejs.cn/download/<br>pnpm安装：npm install pnpm -g<br>hexo安装：npm install hexo-cli -g<br></code></pre></td></tr></table></figure><p>4、在Vscode打开的项目终端下执行如下命令：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">pnpm i<br>pnpm dev<br></code></pre></td></tr></table></figure><p>5、使用hexo deploy命令部署，打开mengchao666.github.io即可</p><p>6、新增文章后，继续使用hexo deploy命令部署</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h2 id=&quot;一、网站部署&quot;&gt;&lt;a href=&quot;#一、网站部署&quot; class=&quot;headerlink&quot; title=&quot;一、网站部署&quot;&gt;&lt;/a&gt;一、网站部署&lt;/h2&gt;&lt;p&gt;1、首先在github上创建自己的一个仓库，仓库名字为mengchao666.github.io&lt;/p&gt;
+&lt;</summary>
+      
+    
+    
+    
+    <category term="网站" scheme="http://example.com/categories/%E7%BD%91%E7%AB%99/"/>
+    
+    
+    <category term="网站" scheme="http://example.com/tags/%E7%BD%91%E7%AB%99/"/>
     
   </entry>
   
