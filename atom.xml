@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2024-11-11T14:02:20.475Z</updated>
+  <updated>2024-11-11T14:15:36.600Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,26 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>git提交流程</title>
+    <link href="http://example.com/posts/1.html"/>
+    <id>http://example.com/posts/1.html</id>
+    <published>2024-11-11T14:12:51.000Z</published>
+    <updated>2024-11-11T14:15:36.600Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="一、Git下载及配置"><a href="#一、Git下载及配置" class="headerlink" title="一、Git下载及配置"></a>一、Git下载及配置</h2><p>我们第一次用git或者是新电脑上重新安装git工具的时候，都需要重新配置一下这个工具。</p><h3 id="Windows安装git"><a href="#Windows安装git" class="headerlink" title="Windows安装git"></a>Windows安装git</h3><p>官网网址<a href="https://git-scm.com/downloads">https://git-scm.com/downloads</a>下载速度慢，且有可能安装不成功。 附快速下载地址（国内下载站）：<a href="https://github.com/waylau/git-for-win">https://github.com/waylau/git-for-win</a> 。 下载完之后，Windows中你在桌面上或者文件管理器中鼠标右键就可以看见Git Bash here，就是用来打开git bash的。</p><h3 id="Linux安装git"><a href="#Linux安装git" class="headerlink" title="Linux安装git"></a>Linux安装git</h3><p>linux在终端中，输入<code>sudo apt-get install git</code></p><p>下载完可以用命令<code>git --version</code>打印当前的git版本验证是否成功。下面正式开始Git的配置。</p><h3 id="配置git基本信息"><a href="#配置git基本信息" class="headerlink" title="配置git基本信息"></a>配置git基本信息</h3><p>接下来就是不管我们是第一次使用git工具，还是后来换电脑了，还是换成linux系统了，要想使用git都按照下面的方法配置一遍，才可以使用。 安装成功之后，在命令行中敲下如下命令 <code>git config --list</code>,显示当前的配置信息。 接下来设置提交仓库时的用户名信息 <code>git config --global user.name &quot;张三&quot;</code> 设置提交仓库是的邮箱信息 <code>git config --global user.email &quot;xxxxxxxx@qq.com&quot;</code> git设置关闭自动换行<code>git config --global core.autocrlf false</code> 为了保证文件的换行符是以安全的方法，避免windows与unix的换行符混用的情况，最好也加上这么一句 <code>git config --global core.safecrlf true</code></p><p>其实这些信息都在一个配置文件中，就在当前用户的主目录下边的**.gitconfig**文件中，也可以直接打开这个文件<code>cd ~,vim .gitconfig</code>进行编辑。</p><h3 id="git协议及秘钥配置"><a href="#git协议及秘钥配置" class="headerlink" title="git协议及秘钥配置"></a>git协议及秘钥配置</h3><p>git有四种协议：Git协议，http协议，本地协议，ssh协议。使用https除了速度慢以外，还有个最大的麻烦是每次推送都必须输入口令，但是在某些只开放http端口的公司内部就无法使用ssh协议而只能用https。大部分都是用ssh协议。这个不仅速度快，而且不用每次提交输入密码，可谓是省心省力。 下面就说一下ssh配置过程。(这个协议配置的过程不可缺少，不然就用不了这种协议。)</p><p>首先生成 RSA 密钥对 :</p><p><code>ssh-keygen -t rsa -C &quot;xxxxxxxx@qq.com&quot;</code>注意格式，一定要正确。 ssh和-keygen无空格 此时在用户主目录下就会有一个.ssh隐藏文件，进入该目录有一个id_rsa.pub文件，cat命令查看这个文件，复制下来然后在 github网站添加公钥 ，方法如下 在 Github 网站添加公钥：在右上角头像处点settings进入设置，然后点SSH and GPG keys,进入之后点击New SSH key 粘贴进去，随便给这个秘钥命个名，方便管理就行了。钥匙显示黑色即可。 此时配置就完成了。接下来就可以使用git了。 执行此命令验证是否成功<code>ssh -T git@github.com</code> 成功显示为：Hi XXX! You’ve successfully authenticated, but GitHub does not provide shell access.</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h2 id=&quot;一、Git下载及配置&quot;&gt;&lt;a href=&quot;#一、Git下载及配置&quot; class=&quot;headerlink&quot; title=&quot;一、Git下载及配置&quot;&gt;&lt;/a&gt;一、Git下载及配置&lt;/h2&gt;&lt;p&gt;我们第一次用git或者是新电脑上重新安装git工具的时候，都需要重新配置一下</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>addr2line</title>
