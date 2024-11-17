@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2024-11-13T15:54:38.496Z</updated>
+  <updated>2024-11-17T06:16:08.278Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,29 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>dd命令</title>
+    <link href="http://example.com/posts/dd%E5%91%BD%E4%BB%A4.html"/>
+    <id>http://example.com/posts/dd%E5%91%BD%E4%BB%A4.html</id>
+    <published>2024-11-17T06:15:34.000Z</published>
+    <updated>2024-11-17T06:16:08.278Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote><p>dd命令可以从一个文件或设备向另一个文件或设备进行复制</p></blockquote><h2 id="一、dd命令常用语法"><a href="#一、dd命令常用语法" class="headerlink" title="一、dd命令常用语法"></a>一、dd命令常用语法</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">dd <span class="hljs-attribute">if</span>=input_file <span class="hljs-attribute">of</span>=output_file [options]<br></code></pre></td></tr></table></figure><p>options是一些可选参数，if和of是必须有的</p><ul><li>if 表示输入文件</li><li>of 表示输出文件</li><li>bs：设置每次读取和写入的块大小（单位为字节或者是可以添加的后缀，如b、k、m等），默认为512字节。</li><li>count：设置要复制的块数。</li><li>iflag：设置输入选项，常用的选项有direct（绕过缓存直接读取）和sync（同步数据到磁盘）。</li><li>oflag：设置输出选项，常用的选项有direct（绕过缓存直接写入）和sync（同步数据到磁盘）。</li><li>skip&#x3D;xxx 是在备份时对if 后面的部分也就是原文件跳过多少块再开始备份；</li><li>seek&#x3D;xxx则是在备份时对of 后面的部分也就是目标文件跳过多少块再开始写</li></ul><h2 id="二、dd常用命令-读磁盘"><a href="#二、dd常用命令-读磁盘" class="headerlink" title="二、dd常用命令-读磁盘"></a>二、dd常用命令-读磁盘</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">dd <span class="hljs-keyword">if</span>=/dev/sde1 of=tee-test.img bs=<span class="hljs-number">1</span>M skip=<span class="hljs-number">4</span> count=<span class="hljs-number">16</span><br></code></pre></td></tr></table></figure><p>含义为从&#x2F;dev&#x2F;sde1设备起始位置，跳过4M，读取16M内容到tee-test.img中<br>想要查看tee-test.img，可以使用hexdump命令</p><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">hexdump -C tee-test.img<br></code></pre></td></tr></table></figure><p>只查看部分内容，例如前100个字节：</p><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">hexdump -C -n <span class="hljs-number">100</span> tee-test.img<br></code></pre></td></tr></table></figure><h2 id="三、dd常用命令-写磁盘"><a href="#三、dd常用命令-写磁盘" class="headerlink" title="三、dd常用命令-写磁盘"></a>三、dd常用命令-写磁盘</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">dd <span class="hljs-attribute">if</span>=/dev/zero <span class="hljs-attribute">of</span>=/dev/sda <span class="hljs-attribute">bs</span>=1k <span class="hljs-attribute">seek</span>=8224 <span class="hljs-attribute">count</span>=32<br></code></pre></td></tr></table></figure><p>含义为从&#x2F;dev&#x2F;zero中也就是将后面的of目标文件写0，将&#x2F;dev&#x2F;sda设备的起始地址，跳过8224KB后，连续写入32KB 0数据</p><h2 id="四、通过fdisk-l确认分区的实际起始地址"><a href="#四、通过fdisk-l确认分区的实际起始地址" class="headerlink" title="四、通过fdisk -l确认分区的实际起始地址"></a>四、通过fdisk -l确认分区的实际起始地址</h2><p>使用<code>fdisk -l</code>显示磁盘分区情况</p><figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs tap"><span class="hljs-comment"># fdisk -l</span><br><br>Disk /dev/sde: 19.16 GB,<span class="hljs-number"> 20577255424 </span>bytes,<span class="hljs-number"> 5023744 </span>sectors<br>Sector size (logical/physical):<span class="hljs-number"> 4096 </span>bytes /<span class="hljs-number"> 4096 </span>bytes<br><br>  Device  Start     End<br>/dev/sde1  <span class="hljs-number"> 256 </span>    131327<br><br></code></pre></td></tr></table></figure><p>这里显示sde1的起始地址为256，那么实际地址为：<br>256 ✖️ 4096 &#x3D; 1048576 &#x3D; 1024 ✖️ 1024 &#x3D; 1MB，所以sde1的位置为&#x2F;dev&#x2F;sde的起始地址偏移1M，其实起始1M，存放的应该是磁盘分区信息</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;dd命令可以从一个文件或设备向另一个文件或设备进行复制&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;一、dd命令常用语法&quot;&gt;&lt;a href=&quot;#一、dd命令常用语法&quot; class=&quot;headerlink&quot; title=&quot;一、dd命令常用语法</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>Makefile基础语法</title>
