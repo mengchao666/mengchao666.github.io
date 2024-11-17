@@ -2,6 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://example.com/posts/1.html</loc>
+    
+    <lastmod>2024-11-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://example.com/posts/%E4%BA%8C%E5%8F%89%E6%A0%91%E7%AE%97%E6%B3%95.html</loc>
+    
+    <lastmod>2024-11-17</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://example.com/posts/dd%E5%91%BD%E4%BB%A4.html</loc>
     
     <lastmod>2024-11-17</lastmod>
@@ -56,7 +74,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/about/index.html</loc>
+    <loc>http://example.com/explore/notes/%E6%8E%A2%E7%B4%A2%E8%80%85%E7%AC%94%E8%AE%B0.html</loc>
     
     <lastmod>2024-09-17</lastmod>
     
@@ -65,7 +83,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/explore/notes/%E6%8E%A2%E7%B4%A2%E8%80%85%E7%AC%94%E8%AE%B0.html</loc>
+    <loc>http://example.com/about/index.html</loc>
     
     <lastmod>2024-09-17</lastmod>
     
@@ -92,13 +110,6 @@
 
   
   <url>
-    <loc>http://example.com/tags/Makefile/</loc>
-    <lastmod>2024-11-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>http://example.com/tags/Linux%E5%B7%A5%E5%85%B7/</loc>
     <lastmod>2024-11-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -106,7 +117,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/git/</loc>
+    <loc>http://example.com/tags/Makefile/</loc>
     <lastmod>2024-11-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -119,14 +130,14 @@
     <priority>0.2</priority>
   </url>
   
-
-  
   <url>
-    <loc>http://example.com/categories/Makefile/</loc>
+    <loc>http://example.com/tags/git/</loc>
     <lastmod>2024-11-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
+  
+
   
   <url>
     <loc>http://example.com/categories/Linux%E5%B7%A5%E5%85%B7/</loc>
@@ -136,7 +147,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/git/</loc>
+    <loc>http://example.com/categories/Makefile/</loc>
     <lastmod>2024-11-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -144,6 +155,13 @@
   
   <url>
     <loc>http://example.com/categories/%E7%BD%91%E7%AB%99/</loc>
+    <lastmod>2024-11-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://example.com/categories/git/</loc>
     <lastmod>2024-11-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
