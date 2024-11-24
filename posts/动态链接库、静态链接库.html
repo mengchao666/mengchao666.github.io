@@ -1,0 +1,811 @@
+
+<!DOCTYPE html><html lang="zh-CN" data-theme="light">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>动态链接库、静态链接库 - mengchao666</title>
+
+  
+    <meta name="description" content="一、什么是链接库有时候我们对外提供功能的时候，可能不希望对方看到源码，我们就可以制作成库文件，把库文件和头文件给到对方就可以达到提供功能又不暴露源码的目的。链接库就是指将库文件编译后打包为一个二进制文件，这些二进制文件会在程序调用的时候加载到内存中。实际上，一个或多个源文件编译为目标文件后，这个文件中所引用的外部的符号需要通过链接来找到这部分缺失的地址。而链接的方式又分为两种，如果是在生成可执行文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="动态链接库、静态链接库">
+<meta property="og:url" content="http://example.com/posts/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E3%80%81%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93.html">
+<meta property="og:site_name" content="mengchao666">
+<meta property="og:description" content="一、什么是链接库有时候我们对外提供功能的时候，可能不希望对方看到源码，我们就可以制作成库文件，把库文件和头文件给到对方就可以达到提供功能又不暴露源码的目的。链接库就是指将库文件编译后打包为一个二进制文件，这些二进制文件会在程序调用的时候加载到内存中。实际上，一个或多个源文件编译为目标文件后，这个文件中所引用的外部的符号需要通过链接来找到这部分缺失的地址。而链接的方式又分为两种，如果是在生成可执行文">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100407187-924921633.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100406820-895205743.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100406469-1794039349.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100406102-983046895.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100400726-123184020.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100400331-1423504129.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog20241125000251.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100359610-349123771.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100359252-1811276820.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100358934-453919108.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100358477-960135349.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100358144-366040362.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100357744-493835779.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100357370-1446409994.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100351951-1293865682.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100351591-1560610303.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100351053-1224186757.png">
+<meta property="article:published_time" content="2024-11-24T16:03:41.000Z">
+<meta property="article:modified_time" content="2024-11-24T16:03:59.816Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="C语言">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100407187-924921633.png">
+  
+  
+  
+  <meta name="keywords" content="C语言">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="mengchao666" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+
+  
+    
+<link rel="stylesheet" href="https://gcore.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+
+  
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="/css/code-block.css"><link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'">
+<!-- hexo injector head_end start -->
+    <style>
+      @font-face {
+        font-family: 'hytmr';
+        font-style: normal;
+        font-weight: normal;
+        font-display: swap;
+        src: url(https://cdn.coolchong.cn/%E5%AD%97%E4%BD%93%E6%A0%B7%E5%BC%8F/hytmr55.woff) format('woff');
+      }    
+    </style>
+  
+    <style>
+    .medium-zoom-overlay {
+      z-index: 20;
+    }
+    
+    .medium-zoom-image {
+      z-index: 21;
+    }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/style.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+  <!-- hexo injector head_end end --></head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="/assets/images/avatar.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">mengchao666</div><div class="sub cap">个人记录</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="首页" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：C语言</span></div><div class="widget-body"><a class="item active" href="/posts/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E3%80%81%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93.html"><span class="title">动态链接库、静态链接库</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/posts/%E9%A2%84%E5%A4%84%E7%90%86%E3%80%81%E7%BC%96%E8%AF%91%E3%80%81%E6%B1%87%E7%BC%96%E3%80%81%E9%93%BE%E6%8E%A5.html"><span class="title">预处理、编译、汇编、链接</span></a><a class="item" href="/posts/%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7%E5%87%BD%E6%95%B0.html"><span class="title">内存申请函数</span></a><a class="item" href="/posts/%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0.html"><span class="title">字符串函数</span></a><a class="item" href="/posts/%E6%8C%87%E9%92%88.html"><span class="title">指针</span></a></div></widget>
+
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span><a class="cap-action" id="rss" title="Subscribe" href="/atom.xml"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19q0-.825.588-1.412T5 17q.825 0 1.413.588T7 19q0 .825-.587 1.413T5 21m13.5 0q-.65 0-1.088-.475T16.9 19.4q-.275-2.425-1.312-4.537T12.9 11.1q-1.65-1.65-3.762-2.687T4.6 7.1q-.65-.075-1.125-.512T3 5.5q0-.65.45-1.062t1.075-.363q3.075.275 5.763 1.563t4.737 3.337q2.05 2.05 3.338 4.738t1.562 5.762q.05.625-.363 1.075T18.5 21m-6 0q-.625 0-1.075-.437T10.85 19.5q-.225-1.225-.787-2.262T8.65 15.35q-.85-.85-1.888-1.412T4.5 13.15q-.625-.125-1.062-.575T3 11.5q0-.65.45-1.075t1.075-.325q1.825.25 3.413 1.063t2.837 2.062q1.25 1.25 2.063 2.838t1.062 3.412q.1.625-.325 1.075T12.5 21"/></svg></a></div><div class="widget-body fs14"><a class="item title" href="/posts/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E3%80%81%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93.html"><span class="title">动态链接库、静态链接库</span></a><a class="item title" href="/posts/%E9%A2%84%E5%A4%84%E7%90%86%E3%80%81%E7%BC%96%E8%AF%91%E3%80%81%E6%B1%87%E7%BC%96%E3%80%81%E9%93%BE%E6%8E%A5.html"><span class="title">预处理、编译、汇编、链接</span></a><a class="item title" href="/posts/%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7%E5%87%BD%E6%95%B0.html"><span class="title">内存申请函数</span></a><a class="item title" href="/posts/%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0.html"><span class="title">字符串函数</span></a><a class="item title" href="/posts/%E6%8C%87%E9%92%88.html"><span class="title">指针</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/mengchao666" target="_blank" rel="external nofollow noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="#000000" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></a><a class="social" href="/about/" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linejoin="round"><path stroke-linecap="round" stroke-width="1.5" d="M12 21a9 9 0 1 0-8-4.873L3 21l4.873-1c1.236.639 2.64 1 4.127 1"/><path stroke-width="2.25" d="M7.5 12h.01v.01H7.5zm4.5 0h.01v.01H12zm4.5 0h.01v.01h-.01z"/></g></svg></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></g></svg></a><a class="social" href="javaScript:switchTheme();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="#000000" d="M233.54 142.23a8 8 0 0 0-8-2a88.08 88.08 0 0 1-109.8-109.8a8 8 0 0 0-10-10a104.84 104.84 0 0 0-52.91 37A104 104 0 0 0 136 224a103.1 103.1 0 0 0 62.52-20.88a104.84 104.84 0 0 0 37-52.91a8 8 0 0 0-1.98-7.98m-44.64 48.11A88 88 0 0 1 65.66 67.11a89 89 0 0 1 31.4-26A106 106 0 0 0 96 56a104.11 104.11 0 0 0 104 104a106 106 0 0 0 14.92-1.06a89 89 0 0 1-26.02 31.4"/></svg></a><a class="social" href="javaScript:toggleSnow();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 14.25l-.831-.659c-.946-.75-1.419-1.125-1.419-1.591s.473-.841 1.419-1.591L21 9.75m-18 0l.831.659c.946.75 1.419 1.125 1.419 1.591s-.473.841-1.419 1.591L3 14.25M14.572 21l.156-1.059c.178-1.205.267-1.807.674-2.042c.407-.236.972-.011 2.104.437l.994.394M9.428 3l-.156 1.059c-.178 1.205-.267 1.807-.674 2.042c-.407.236-.972.011-2.104-.437L5.5 5.27M5 18.732l1.07-.395c1.218-.448 1.827-.672 2.265-.438s.533.838.724 2.042L9.227 21M19 5.268l-1.07.394c-1.218.45-1.828.673-2.265.439s-.533-.838-.724-2.042L14.773 3M19 12H5m10.5 6l-7-12m7 0l-7 12" color="#000000"/></svg></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E3%80%81%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93.html">C语言</a></div><div id="tag"> <span>&nbsp标签：</span><a class="cap breadcrumb-link" href="/tags/C%E8%AF%AD%E8%A8%80/">C语言</a>&nbsp</div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-24T16:03:41.000Z">2024-11-25</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-24T16:03:59.816Z">2024-11-25</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>动态链接库、静态链接库</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="一、什么是链接库"><a href="#一、什么是链接库" class="headerlink" title="一、什么是链接库"></a>一、什么是链接库</h1><p>有时候我们对外提供功能的时候，可能不希望对方看到源码，我们就可以制作成库文件，把库文件和头文件给到对方就可以达到提供功能又不暴露源码的目的。链接库就是指将库文件编译后打包为一个二进制文件，这些二进制文件会在程序调用的时候加载到内存中。实际上，一个或多个源文件编译为目标文件后，这个文件中所引用的外部的符号需要通过链接来找到这部分缺失的地址。而链接的方式又分为两种，如果是在生成可执行文件之前就已经把所有的链接操作完成了，这种链接称为静态链接，这种库文件称为静态链接库；如果是在程序执行的时候才进行链接，这种称为动态链接，对应的库文件称为动态链接库。也正因为如此，使用静态库时生成的可执行文件是可以独立运行的，因为他不再需要外部的内容，而动态库编译生成的可执行文件就无法单独运行，因为他在运行时，才会去链接所引用的外部地址。</p>
+<h2 id="1-静态链接库"><a href="#1-静态链接库" class="headerlink" title="1. 静态链接库"></a>1. 静态链接库</h2><p>静态库会直接加载到代码段，他和所有的目标文件一起链接成可执行文件，生成可执行文件后可以独立运行。但是，正因为静态库会直接加载到内存的代码段，可执行文件的内部都拷贝了所有目标文件和静态库的指令和数据，编译生成的可执行文件会比较大。并且，如果整个系统中有多个链接统一静态库的可执行文件时，每个可执行文件都要拷贝一份静态库的指令和数据，这就造成了空间浪费，因为他们拷贝的数据都是同样的内容。最后，如果一旦静态库文件有代码更新，就需要重新编译链接重新生成整个可执行文件，更新升级麻烦。在 Linux 系统中，静态链接库文件的名称通常为 libxxx .a，在 Windows 系统中，静态链接库文件的后缀名为 .lib。</p>
+<h2 id="2-动态链接库"><a href="#2-动态链接库" class="headerlink" title="2. 动态链接库"></a>2. 动态链接库</h2><p>其实，动态库这个称呼本身是对 Windows 平台上动态链接所用的库文件的一种称呼，在 Linux 下，一般称为共享库。动态库是在运行时加载到内存的共享库段，这样，如果很多程序都要用到静态库的时候，就会节省大量内存，因为它不像静态库那样加载到代码段，而是是在运行时载入内存的共享库段，当多个程序要用到同一个动态库时，所有程序可以共享这个共享库段的指令和数据。动态链接的实现是这样的，在编译时首先由静态链接器将所有的目标文件链接为一个可执行文件，等到程序运行时会将要用到的动态库加载到内存的共享库段，由动态链接器完成可执行文件和动态库文件的链接工作，可以理解为按需载入内存（在需要用到的时候，才会载入内存）。动态库大大方便了程序的升级和更改，只要用新的动态库文件替换旧的动态库文件即可，在运行时，会自动连接新的库文件。但是正因为动态库运行时载入的这个特点，使用动态库的可执行文件在运行时，会略慢一些，但整体来说，运行速度的性能损失，远远小于内存节省带来的收益。在Linux系统中，动态链接库的名称通常为 libxxx.so，在 Windows 系统中，动态链接库的后缀名为 .dll。GCC 编译器在生成可执行文件时，默认会优先使用动态链接库完成链接，如果当前系统环境中没有程序文件所需要的动态链接库，GCC 便会选择静态链接库进行静态链接。如果两种库文件都没有找到，则链接失败。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100407187-924921633.png"></p>
+<h2 id="3-库文件与头文件"><a href="#3-库文件与头文件" class="headerlink" title="3. 库文件与头文件"></a>3. 库文件与头文件</h2><p>我们在发布库文件的同时，要将库文件和头文件一起发布，头文件中存储了变量、函数或者类等这些功能模块的声明部分，库文件中存储了各模块具体的实现部分。也就是说，头文件中定义了调用库文件中功能模块的接口。头文件的存在也实现了这样一种功能，当我们对外提供功能时，可以通过库文件来隐藏源码实现，功能的使用方只需要根据头文件所提供的接口来调用功能模块即可。</p>
+<h2 id="4-库文件的引用"><a href="#4-库文件的引用" class="headerlink" title="4. 库文件的引用"></a>4. 库文件的引用</h2><p>当我们使用 GCC 编译和链接程序时，GCC 默认会链接 libc.a 或者 libc.so这两个标准库，但是对于其他的库（非标准库、第三方库等），就需要手动去添加链接库。通过 GCC -l 选项来指定库名，直接在 -l 后面加库名即可。（ -l 是小写的 L ）<br />正常情况下，我们指定了要使用的库名时，GCC 会自动在标准库目录中搜索文件，例如在CentOS中是 &#x2F;usr&#x2F;lib 目录。但是，如果想链接位于其它目录中的库，比如说我们自己建的库，或者我们要引用别人提供的库，就需要在编译时显示指定库的路径。指定方法有三种：<br />① 像指定普通头文件的路径一样，为 GCC 显示指定该库文件的完整路径与文件名 -I &#x2F;目录名 。<br />② 通过 GCC 的 -L 选项，为GCC增加搜索目录，可以使用多个 -L 选项，或者在一个选项内使用冒号 : 分割来指定多个搜索路径。<br />③ 把库文件所在的目录加到环境变量 LIBRARYPATH 中。</p>
+<h1 id="二、自己动手制作静态链接库"><a href="#二、自己动手制作静态链接库" class="headerlink" title="二、自己动手制作静态链接库"></a>二、自己动手制作静态链接库</h1><p>准备工作，共准备4个文件，目录结构如下</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100406820-895205743.png"></p>
+<p>my_print.h 文件内容如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> _TEST_H</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> _TEST_H</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdio.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdlib.h&quot;</span></span><br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">print_array_int</span><span class="hljs-params">(<span class="hljs-type">int</span>* array, <span class="hljs-type">int</span> len)</span></span>;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">print_array_char</span><span class="hljs-params">(<span class="hljs-type">char</span>* array, <span class="hljs-type">int</span> len)</span></span>;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">print_array_string</span><span class="hljs-params">(<span class="hljs-type">char</span>* array[], <span class="hljs-type">int</span> len)</span></span>;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">print_hello</span><span class="hljs-params">()</span></span>;<br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+
+<p>my_print.c 文件内容如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;my_print.h&quot;</span></span><br>  <br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">print_array_int</span><span class="hljs-params">(<span class="hljs-type">int</span>* array, <span class="hljs-type">int</span> len)</span></span><br><span class="hljs-function"></span>&#123;   <br>    <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; <br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;array: &quot;</span>);<br>    <span class="hljs-keyword">for</span>(i = <span class="hljs-number">0</span>; i &lt; len; i++)<br>    &#123;   <br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d &quot;</span>, array[i]);<br>    &#125;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>&#125;<br> <br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">print_array_char</span><span class="hljs-params">(<span class="hljs-type">char</span>* array, <span class="hljs-type">int</span> len)</span></span><br><span class="hljs-function"></span>&#123;<br>  i = <span class="hljs-number">0</span>;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;array: &quot;</span>);<br>    <span class="hljs-keyword">for</span>(i = <span class="hljs-number">0</span>; i &lt; len; i++)<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%c &quot;</span>, array[i]);<br>    &#125;<br>     <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">print_array_string</span><span class="hljs-params">(<span class="hljs-type">char</span>* array[], <span class="hljs-type">int</span> len)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;array: &quot;</span>);<br>    <span class="hljs-keyword">for</span>(i = <span class="hljs-number">0</span>; i &lt; len; i++)<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s &quot;</span>, array[i]);<br>    &#125;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>main.c 文件内容如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;my_print.h&quot;</span></span><br> <br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-type">int</span> a1[<span class="hljs-number">10</span>];<br>    <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-keyword">for</span>(i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++)<br>    &#123;<br>       a1[i] = i + <span class="hljs-number">1</span>;<br>    &#125;<br>    <span class="hljs-built_in">print_array_int</span>(a1, <span class="hljs-number">10</span>);<br>    <span class="hljs-built_in">print_hello</span>();<br><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>print_hello.c 文件内容如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;my_print.h&quot;</span></span><br> <br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">print_hello</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;hello Linux ...\n&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="1-静态库的制作"><a href="#1-静态库的制作" class="headerlink" title="1. 静态库的制作"></a>1. 静态库的制作</h2><p>① 首先把所有 .c 文件编译为 .o 文件</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">gcc -c *<span class="hljs-selector-class">.c</span> -<span class="hljs-selector-tag">I</span> ../<span class="hljs-selector-tag">header</span>/<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100406469-1794039349.png"></p>
+<p>一定要从 .o 文件去生成 .a 文件，否则即使你生成了库，在使用时也可能出现未知的错误。<br />② 将 .o 文件打包为 .a 文件<br />这一步需要使用 ar 工具来完成。ar 工具是用来创建, 修改和提取档案的工具，ar 是 archive 的缩写。归档是指将多个文件（或一个文件）放到单个文件中，不进行其他额外的操作。也就是说，归档并不等同于压缩，压缩会使文件的大小减小。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs undefined">ar rcs libmprint.a *.o<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>参数 r ：在库中插入模块（替换）。当插入的模块名已经在库中存在，则替换同名的模块。如果若干模块中有一个模块在库中不存在，ar 显示一个错误消息，并不替换其他同名模块。默认的情况下，新的成员增加在库的结尾处，可以使用其他任选项来改变增加的位置。</li>
+<li>参数 c ：创建一个库。不管库是否存在，都将创建。</li>
+<li>参数 s ：创建目标文件索引，这在创建较大的库时能加快时间。如果不需要创建索引，可改成大写 S 参数。如果 .a 文件缺少索引，可以使用 ranlib 命令添加）。</li>
+</ul>
+<p>一般我们命令静态库的时候是这样的，前面是 lib 中间加上我们自己给静态库文件的名称，后面加后缀 .a ，也就是 libxxx.a ，实际上， xxx 才是静态库文件的名称。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100406102-983046895.png"></p>
+<p>可以查看一下生成的 libmprint.a 的内容，一堆乱码</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100400726-123184020.png"></p>
+<p>我们可以用 nm 命令查看库文件的信息，可以看到它是由 my_print.o 和 print_hello.o 生成的。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100400331-1423504129.png"></p>
+<h2 id="2-静态库的使用"><a href="#2-静态库的使用" class="headerlink" title="2. 静态库的使用"></a>2. 静态库的使用</h2><p>静态库的使用方法</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">gcc <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.c</span> -o exe -lmyprint -L ../lib/ -<span class="hljs-selector-tag">I</span> ../<span class="hljs-selector-tag">header</span>/<br></code></pre></td></tr></table></figure>
+
+<p>首先对上面的命令进行分解一下，-lmyprint 用于指定链接库的名字，我们上面生成了一个名为 libmprint.a 的静态库，把前缀后缀去掉留下中间的名字即可；-L …&#x2F;lib&#x2F; 指定静态库的搜索目录，不指定的会，编译器只会去默认的链接库搜索路径寻找；-I …&#x2F;header&#x2F; 这个就比较熟悉了，指定头文件的路径。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog20241125000251.png"></p>
+<p>我们再发布的时候，只需要把 header 和 lib 发布给别人即可</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100359610-349123771.png"></p>
+<h1 id="三、自己动手制作动态链接库"><a href="#三、自己动手制作动态链接库" class="headerlink" title="三、自己动手制作动态链接库"></a>三、自己动手制作动态链接库</h1><h2 id="1-动态库的制作"><a href="#1-动态库的制作" class="headerlink" title="1. 动态库的制作"></a>1. 动态库的制作</h2><p>① 编译生成与位置无关的 .o 文件<br />动态共享库是在运行的时候才加载的，它加载到内存的共享库段，用完后就释放，所以要编译为与位置无关的。这里要用到GCC 的 -fPIC 选项参数，该选项表示编译为位置独立的代码，如果不用这个选项的话编译后的代码是位置相关的，所以动态载入的时候会通过代码拷贝的方式来满足不同进程的需要，而不能达到真正代码段共享的目的。在静态链接库中，可执行文件在链接时就知道每一行代码、每一个变量会被放到线性地址空间的什么位置，因此这些地址可以都作为常数写到代码里面。对于动态库，只有加载的时候才知道。也就是说，动态链接库要编译为与位置无关的代码，这样只有在运行时才直到代码的位置。而静态库是在生成可执行文件之前，就直接把代码加载到内存的代码段了，代码的位置等信息也就已经知道了，所以不需要生成与位置无关的代码。</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">gcc -fPIC -c *<span class="hljs-selector-class">.c</span> -<span class="hljs-selector-tag">I</span> ../<span class="hljs-selector-tag">header</span>/<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100359252-1811276820.png"></p>
+<p>② 将 .o 文件打包<br />这里要用到 GCC 的 -shared 选项，该选项指定生成动态连接库（让连接器生成T类型的导出符号表，有时候也生成弱连接W类型的导出符号），如果不用该标志的话外部程序将无法连接。<br />可以在动态库文件名后面加版本号 libxxx.so.主版本号.副版本号 ，比如 libmdprint.so.1.1 表示我这是 1.1 版本的动态库，文件后缀后面的数字就是版本号的意思。</p>
+<figure class="highlight vbnet"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vbnet">gcc -<span class="hljs-keyword">shared</span> *.o -o libmdrint.so<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100358934-453919108.png"></p>
+<h2 id="2-动态库的使用"><a href="#2-动态库的使用" class="headerlink" title="2. 动态库的使用"></a>2. 动态库的使用</h2><h3 id="（1）加载动态库"><a href="#（1）加载动态库" class="headerlink" title="（1）加载动态库"></a>（1）加载动态库</h3><p>使用动态库的命令和使用静态库的命令一样</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">gcc <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.c</span> -o exe -lmdrint -L ../lib/ -<span class="hljs-selector-tag">I</span> ../<span class="hljs-selector-tag">header</span>/<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100358477-960135349.png"></p>
+<h3 id="（2）“加载共享库出错”的解决方法"><a href="#（2）“加载共享库出错”的解决方法" class="headerlink" title="（2）“加载共享库出错”的解决方法"></a>（2）“加载共享库出错”的解决方法</h3><p>这个是时候，虽然我们已经生成了可执行文件，但是当我们运行可执行文件的时候，可能会出现这样的错误</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100358144-366040362.png"></p>
+<p>我们可以通过命令 ldd 来查看一下可执行文件的链接情况</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100357744-493835779.png"></p>
+<p>在我们自己引入的库 libmdrint.so 一栏显示 “not found” ，在默认情况下，我们自己引入的动态库是无法使用的，需要进行一些配置。这里提供以下几种解决方法。</p>
+<h4 id="①-在系统库路径下建立软链接"><a href="#①-在系统库路径下建立软链接" class="headerlink" title="① 在系统库路径下建立软链接"></a>① 在系统库路径下建立软链接</h4><p>前面我们已经介绍了，GCC 会默认去系统库路径下搜索库文件，所以只要我们把自己的库文件放到这个目录下就可以了，系统库的路径是 &#x2F;usr&#x2F;lib 或 &#x2F;lib 。但是我们实际操作的时候，可能无法把文件拷贝到这两个路径下，我们可以在系统库路径下建立一个软链接来指向我们的库文件（软链接相关知识请参考本人 Linux 专栏文章《【Linux王者之路基础篇：基本命令与基础知识】Linux常用shell命令（及相关知识）详解与用法演示》）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">ln</span> -s /home/qq/dm/dm_lib/lib/libmdrint.so /usr/lib/libmdrint.so<br></code></pre></td></tr></table></figure>
+
+<p>这里第一个路径也就是我们自己的动态库文件所在目录，一定要用绝对路径（如果使用相对路径，会找不到该路径），第二个路径是系统库的路径。</p>
+<h4 id="②-配置环境变量"><a href="#②-配置环境变量" class="headerlink" title="② 配置环境变量"></a>② 配置环境变量</h4><p>实际上， ld 链接器在寻找库路径的时候，都是通过一个环境变量 LD_LIBRARY_PATH 来寻找的，我们可以打印看一下这个环境变量</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100357370-1446409994.png"></p>
+<p>我们可以通过 export 命令来给环境变量增加一个路径，只需要把自己的路径加进去即可，命令如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> LD_LIBRARY_PATH=/home/qq/dm/dm_lib/lib/:<span class="hljs-variable">$LD_LIBRARY_PATH</span><br></code></pre></td></tr></table></figure>
+
+<p>我们知道在 shell 下直接把绝对路径加到环境变量中，只是一种临时的环境变量，当关机再次开机的时候，就会失效，如果想要永久有效，可以修改配置文件。我们可以把上面这条命令放到 .bashrc 文件中。<br />在我的 Linux 专栏文章中，已经不只一次提到 .bashrc 这个配置文件了，其实 Linux 每次开机都会执行这个配置文件，我们实现环境变量永久有效的原理就是，Linux 每次开机都会执行 .bashrc 配置文件，而配置文件中包含设置环境变量的命令，所以每次开机都会配一下环境变量，这样就达到了环境变量永久有效的目的。.bashrc 配置文件在家目录下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">vim ~/.bashrc<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100351951-1293865682.png"></p>
+<h4 id="③-修改-ld-so-加载器的配置文件-ld-so-conf"><a href="#③-修改-ld-so-加载器的配置文件-ld-so-conf" class="headerlink" title="③ 修改 ld.so 加载器的配置文件 ld.so.conf"></a>③ 修改 ld.so 加载器的配置文件 ld.so.conf</h4><p>这里先介绍几个概念：</p>
+<ul>
+<li>ld链接器 ：gcc 可以在编译周期传递参数，指定需要链接的库文件，生命周期是在 compile-time。</li>
+<li>ld.so动态链接器&#x2F;加载器，程序运行的时候会根据指定的路径去加载指定的库，生命周期是在 run-time。</li>
+<li>ld.so加载器及配置文件ld.so.conf：指定动态链接库的搜索路径（也可以通过配置环境变量$LD_LIBRARY_PATH 来指定程序运行时的动态库.so文件的搜索路径）。使用 ldconfig 就可以将 ld.so.conf 中的指定目录的库文件加载到内存中，并记录在&#x2F;etc&#x2F;ld.so.cache文件中。配置文件 &#x2F;etc&#x2F;ld.so.conf 记录了编译时使用的动态链接库的路径，在默认情况下，编译器只会使用 &#x2F;lib 和 &#x2F;usr&#x2F;lib 这两个目录下的库文件，通过这个配置文件可以增加我们自己的动态库文件搜索路径。</li>
+</ul>
+<p>使用 vim 编辑器打开配置文件，把路径放进去</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> vim /etc/ld.so.conf<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100351591-1560610303.png"></p>
+<p>放入路径之后，还要在 shell 下执行一条命令，使刚才的配置生效</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs undefined">sudo ldconfig -v<br></code></pre></td></tr></table></figure>
+
+<p>不管使用上面三种方法的哪种，都可以使动态库正常加载到可执行文件中，我们再次使用 ldd 命令查看 exe 文件，可以看到，我们的动态库 libmdrint.so 后面由原来的 “not found” 变成了一个路径，这说明加载器现在可以找到动态库的路径了，可执行文件 exe 也就可以运行了。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog458378-20231222100351053-1224186757.png"></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/posts/%E9%A2%84%E5%A4%84%E7%90%86%E3%80%81%E7%BC%96%E8%AF%91%E3%80%81%E6%B1%87%E7%BC%96%E3%80%81%E9%93%BE%E6%8E%A5.html">预处理、编译、汇编、链接</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\posts\字符串函数.html" title="字符串函数"><span class="title">字符串函数</span></a><a class="item" href="\posts\指针.html" title="指针"><span class="title">指针</span></a><a class="item" href="\posts\预处理、编译、汇编、链接.html" title="预处理、编译、汇编、链接"><span class="title">预处理、编译、汇编、链接</span></a><a class="item" href="\posts\内存申请函数.html" title="内存申请函数"><span class="title">内存申请函数</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/topic/">专栏</a><a href="/archives/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/mengchao666/Linux-0.11code">Linux 0.11</a></div><div class="sitemap-group"><span class="fs15">探索</span><a href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html">站点</a><a href="/explore/notes/%E6%8E%A2%E7%B4%A2%E8%80%85%E7%AC%94%E8%AE%B0.html">笔记</a></div><div class="sitemap-group"><span class="fs15">友链</span><a href="/about/">朋友圈</a></div></div><div class="text"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/assets/images/keyboard.jpg" alt="描述文字" style="float: right; width: 60px; margin-left: 20px;">
+<center>
+  <div>
+    <div>
+      © 2024
+      <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com">mengchao666</a>
+      开心地使用 <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/xaoxuu/hexo-theme-stellar">Stellar</a>
+      主题，星际地球第<span id="runtime_span"></span>
+    </div>
+    <script type="text/javascript">
+      function show_runtime() {
+          window.setTimeout("show_runtime()", 1000);
+          X = new Date("08/18/2024 00:00:00");
+          Y = new Date();
+          T = (Y.getTime() - X.getTime());
+          M = 24 * 60 * 60 * 1000;
+          a = T / M;
+          A = Math.floor(a);
+          runtime_span.innerHTML = A + "天"
+      }
+      show_runtime();
+    </script>
+  </div>
+</center>
+<div class="totalcount" style="text-align:center">收集了 31 颗星星 ✧ </span><span class="post-count">共 36.1k 粒星尘，好像写完一本 鲁迅 的《呐喊》了啊</div></div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="true"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93"><span class="toc-text">1. 静态链接库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93"><span class="toc-text">2. 动态链接库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%BA%93%E6%96%87%E4%BB%B6%E4%B8%8E%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="toc-text">3. 库文件与头文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%BA%93%E6%96%87%E4%BB%B6%E7%9A%84%E5%BC%95%E7%94%A8"><span class="toc-text">4. 库文件的引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%9D%99%E6%80%81%E5%BA%93%E7%9A%84%E5%88%B6%E4%BD%9C"><span class="toc-text">1. 静态库的制作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E9%9D%99%E6%80%81%E5%BA%93%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="toc-text">2. 静态库的使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%8A%A8%E6%80%81%E5%BA%93%E7%9A%84%E5%88%B6%E4%BD%9C"><span class="toc-text">1. 动态库的制作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%8A%A8%E6%80%81%E5%BA%93%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="toc-text">2. 动态库的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E5%8A%A0%E8%BD%BD%E5%8A%A8%E6%80%81%E5%BA%93"><span class="toc-text">（1）加载动态库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E2%80%9C%E5%8A%A0%E8%BD%BD%E5%85%B1%E4%BA%AB%E5%BA%93%E5%87%BA%E9%94%99%E2%80%9D%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="toc-text">（2）“加载共享库出错”的解决方法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E2%91%A0-%E5%9C%A8%E7%B3%BB%E7%BB%9F%E5%BA%93%E8%B7%AF%E5%BE%84%E4%B8%8B%E5%BB%BA%E7%AB%8B%E8%BD%AF%E9%93%BE%E6%8E%A5"><span class="toc-text">① 在系统库路径下建立软链接</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E2%91%A1-%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="toc-text">② 配置环境变量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E2%91%A2-%E4%BF%AE%E6%94%B9-ld-so-%E5%8A%A0%E8%BD%BD%E5%99%A8%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-ld-so-conf"><span class="toc-text">③ 修改 ld.so 加载器的配置文件 ld.so.conf</span></a></li></ol></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+  <widget class="widget-wrapper categories-widget">
+    <div class="widget-header categories-header dis-select">
+      <span class="name">分类索引</span>
+    </div>
+    <div class='post-list'>
+      <article class='' id='cats'>
+        
+          <div>
+            <a class="cat" href="/categories/C%E8%AF%AD%E8%A8%80/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>C语言</span>
+              <span class='badge'>(5)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux</span>
+              <span class='badge'>(3)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux%E5%B7%A5%E5%85%B7/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux工具</span>
+              <span class='badge'>(15)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Makefile/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Makefile</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/dm-verity/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>dm-verity</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/git/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>git</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E4%BA%8C%E5%8F%89%E6%A0%91/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>二叉树</span>
+              <span class='badge'>(4)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E7%BD%91%E7%AB%99/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>网站</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+      </article>
+    </div>
+  </widget>
+
+
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"codeblock":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'light'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"twikoo":{"js":"/js/services/twikoo_new.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+
+
+
+<!-- inject -->
+<script src="/js/custom.js"></script><script src="/js/code-block.js"></script><script src="https://cdn.jsdelivr.net/gh/huangwb8/bloghelper@latest/js/input-with-fire.js"></script><script src="https://cdn.staticfile.org/jquery/3.6.3/jquery.min.js"></script><script src="/static/js/snow.js"></script>
+</div><!-- hexo injector body_end start -->
+  <script>
+    mediumZoom(".l_body .content p img", { background: "var(--site-bg)" })
+  </script>
+  <!-- hexo injector body_end end --></body></html>
+<script>var posts=["posts/94、二叉树的中序遍历.html","posts/96、不同的二叉搜索树.html","posts/Makefile基础语法.html","posts/addr2line.html","posts/OOM.html","posts/dd命令.html","posts/98、验证二叉搜索树.html","posts/ftpget.html","/posts/1.html","posts/dm-verity.html","posts/find.html","posts/nm.html","posts/grep.html","/posts/1.html","posts/objdump.html","posts/readelf.html","posts/scp.html","posts/tar.html","posts/sed.html","posts/top.html","posts/tcpdump.html","posts/内存检测工具.html","posts/objcopy.html","posts/动态链接库、静态链接库.html","posts/字符串函数.html","posts/指针.html","posts/二叉树算法核心纲领.html","posts/网站部署-写作.html","posts/预处理、编译、汇编、链接.html","posts/内存申请函数.html","/posts/1.html"];function toRandomPost(){ window.location.href = window.location.origin + posts[Math.floor(Math.random()*posts.length)]; };</script>

@@ -1,0 +1,787 @@
+
+<!DOCTYPE html><html lang="zh-CN" data-theme="light">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>指针 - mengchao666</title>
+
+  
+    <meta name="description" content="1、C语言的精髓–指针指针就是地址，在一定程度上可以把数组名就看成一个特殊的指针,指针也就是一个变量而已，指针全名指针变量。 （1）指针数组指针数组，是个数组，里边放的东西都是指针。char *p[2]&#x3D;&#123;&quot;china&quot;,&quot;linux&quot;&#125;; 仔细来说，从运算符优先级来看，[]的优先级比*高，所以p先和[]结合。所以这就是个数组，再与指针结">
+<meta property="og:type" content="article">
+<meta property="og:title" content="指针">
+<meta property="og:url" content="http://example.com/posts/%E6%8C%87%E9%92%88.html">
+<meta property="og:site_name" content="mengchao666">
+<meta property="og:description" content="1、C语言的精髓–指针指针就是地址，在一定程度上可以把数组名就看成一个特殊的指针,指针也就是一个变量而已，指针全名指针变量。 （1）指针数组指针数组，是个数组，里边放的东西都是指针。char *p[2]&#x3D;&#123;&quot;china&quot;,&quot;linux&quot;&#125;; 仔细来说，从运算符优先级来看，[]的优先级比*高，所以p先和[]结合。所以这就是个数组，再与指针结">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog5b809e6f908834233029fd990bccc4d5.png">
+<meta property="article:published_time" content="2024-11-24T15:53:14.000Z">
+<meta property="article:modified_time" content="2024-11-24T15:53:36.326Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="C语言">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog5b809e6f908834233029fd990bccc4d5.png">
+  
+  
+  
+  <meta name="keywords" content="C语言">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="mengchao666" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+
+  
+    
+<link rel="stylesheet" href="https://gcore.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+
+  
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="/css/code-block.css"><link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'">
+<!-- hexo injector head_end start -->
+    <style>
+      @font-face {
+        font-family: 'hytmr';
+        font-style: normal;
+        font-weight: normal;
+        font-display: swap;
+        src: url(https://cdn.coolchong.cn/%E5%AD%97%E4%BD%93%E6%A0%B7%E5%BC%8F/hytmr55.woff) format('woff');
+      }    
+    </style>
+  
+    <style>
+    .medium-zoom-overlay {
+      z-index: 20;
+    }
+    
+    .medium-zoom-image {
+      z-index: 21;
+    }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/style.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+  <!-- hexo injector head_end end --></head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="/assets/images/avatar.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">mengchao666</div><div class="sub cap">个人记录</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="首页" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：C语言</span></div><div class="widget-body"><a class="item" href="/posts/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E3%80%81%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93.html"><span class="title">动态链接库、静态链接库</span></a><a class="item" href="/posts/%E9%A2%84%E5%A4%84%E7%90%86%E3%80%81%E7%BC%96%E8%AF%91%E3%80%81%E6%B1%87%E7%BC%96%E3%80%81%E9%93%BE%E6%8E%A5.html"><span class="title">预处理、编译、汇编、链接</span></a><a class="item" href="/posts/%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7%E5%87%BD%E6%95%B0.html"><span class="title">内存申请函数</span></a><a class="item" href="/posts/%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0.html"><span class="title">字符串函数</span></a><a class="item active" href="/posts/%E6%8C%87%E9%92%88.html"><span class="title">指针</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a></div></widget>
+
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span><a class="cap-action" id="rss" title="Subscribe" href="/atom.xml"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19q0-.825.588-1.412T5 17q.825 0 1.413.588T7 19q0 .825-.587 1.413T5 21m13.5 0q-.65 0-1.088-.475T16.9 19.4q-.275-2.425-1.312-4.537T12.9 11.1q-1.65-1.65-3.762-2.687T4.6 7.1q-.65-.075-1.125-.512T3 5.5q0-.65.45-1.062t1.075-.363q3.075.275 5.763 1.563t4.737 3.337q2.05 2.05 3.338 4.738t1.562 5.762q.05.625-.363 1.075T18.5 21m-6 0q-.625 0-1.075-.437T10.85 19.5q-.225-1.225-.787-2.262T8.65 15.35q-.85-.85-1.888-1.412T4.5 13.15q-.625-.125-1.062-.575T3 11.5q0-.65.45-1.075t1.075-.325q1.825.25 3.413 1.063t2.837 2.062q1.25 1.25 2.063 2.838t1.062 3.412q.1.625-.325 1.075T12.5 21"/></svg></a></div><div class="widget-body fs14"><a class="item title" href="/posts/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E3%80%81%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93.html"><span class="title">动态链接库、静态链接库</span></a><a class="item title" href="/posts/%E9%A2%84%E5%A4%84%E7%90%86%E3%80%81%E7%BC%96%E8%AF%91%E3%80%81%E6%B1%87%E7%BC%96%E3%80%81%E9%93%BE%E6%8E%A5.html"><span class="title">预处理、编译、汇编、链接</span></a><a class="item title" href="/posts/%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7%E5%87%BD%E6%95%B0.html"><span class="title">内存申请函数</span></a><a class="item title" href="/posts/%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0.html"><span class="title">字符串函数</span></a><a class="item title" href="/posts/%E6%8C%87%E9%92%88.html"><span class="title">指针</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/mengchao666" target="_blank" rel="external nofollow noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="#000000" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></a><a class="social" href="/about/" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linejoin="round"><path stroke-linecap="round" stroke-width="1.5" d="M12 21a9 9 0 1 0-8-4.873L3 21l4.873-1c1.236.639 2.64 1 4.127 1"/><path stroke-width="2.25" d="M7.5 12h.01v.01H7.5zm4.5 0h.01v.01H12zm4.5 0h.01v.01h-.01z"/></g></svg></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></g></svg></a><a class="social" href="javaScript:switchTheme();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="#000000" d="M233.54 142.23a8 8 0 0 0-8-2a88.08 88.08 0 0 1-109.8-109.8a8 8 0 0 0-10-10a104.84 104.84 0 0 0-52.91 37A104 104 0 0 0 136 224a103.1 103.1 0 0 0 62.52-20.88a104.84 104.84 0 0 0 37-52.91a8 8 0 0 0-1.98-7.98m-44.64 48.11A88 88 0 0 1 65.66 67.11a89 89 0 0 1 31.4-26A106 106 0 0 0 96 56a104.11 104.11 0 0 0 104 104a106 106 0 0 0 14.92-1.06a89 89 0 0 1-26.02 31.4"/></svg></a><a class="social" href="javaScript:toggleSnow();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 14.25l-.831-.659c-.946-.75-1.419-1.125-1.419-1.591s.473-.841 1.419-1.591L21 9.75m-18 0l.831.659c.946.75 1.419 1.125 1.419 1.591s-.473.841-1.419 1.591L3 14.25M14.572 21l.156-1.059c.178-1.205.267-1.807.674-2.042c.407-.236.972-.011 2.104.437l.994.394M9.428 3l-.156 1.059c-.178 1.205-.267 1.807-.674 2.042c-.407.236-.972.011-2.104-.437L5.5 5.27M5 18.732l1.07-.395c1.218-.448 1.827-.672 2.265-.438s.533.838.724 2.042L9.227 21M19 5.268l-1.07.394c-1.218.45-1.828.673-2.265.439s-.533-.838-.724-2.042L14.773 3M19 12H5m10.5 6l-7-12m7 0l-7 12" color="#000000"/></svg></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93%E3%80%81%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93.html">C语言</a></div><div id="tag"> <span>&nbsp标签：</span><a class="cap breadcrumb-link" href="/tags/C%E8%AF%AD%E8%A8%80/">C语言</a>&nbsp</div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-24T15:53:14.000Z">2024-11-24</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-24T15:53:36.326Z">2024-11-24</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>指针</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="1、C语言的精髓–指针"><a href="#1、C语言的精髓–指针" class="headerlink" title="1、C语言的精髓–指针"></a>1、C语言的精髓–指针</h2><p>指针就是地址，在一定程度上可以把数组名就看成一个特殊的指针,指针也就是一个变量而已，指针全名指针变量。</p>
+<h3 id="（1）指针数组"><a href="#（1）指针数组" class="headerlink" title="（1）指针数组"></a>（1）指针数组</h3><p>指针数组，是个数组，里边放的东西都是指针。<code>char *p[2]=&#123;&quot;china&quot;,&quot;linux&quot;&#125;;</code></p>
+<p>仔细来说，从运算符优先级来看，<code>[]的优先级比*高，所以p先和[]结合</code>。所以这就是个数组，再与指针结合，所以叫指针数组。 二重指针可以指向指针数组。</p>
+<h3 id="（2）数组指针"><a href="#（2）数组指针" class="headerlink" title="（2）数组指针"></a>（2）数组指针</h3><p>数组指针，是个指针，指向数组的指针.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a[<span class="hljs-number">2</span>][<span class="hljs-number">5</span>]=&#123;<span class="hljs-number">0</span>&#125;;  <span class="hljs-type">int</span> (*p)[<span class="hljs-number">5</span>]=a;        <span class="hljs-comment">//指向二维数组 </span><br><span class="hljs-type">int</span> b[<span class="hljs-number">2</span>][<span class="hljs-number">3</span>][<span class="hljs-number">4</span>] = &#123;<span class="hljs-number">0</span>&#125;; <span class="hljs-comment">// 多维数组 int(*q)[3][4] = b;</span><br></code></pre></td></tr></table></figure>
+
+<p>这里指针是在()中放着，())和[]优先级都是最高的，结合性是从左向右，所以先与*结合，这是个指针，然后与[]结合，就是指针数组。</p>
+<h3 id="（3）函数指针"><a href="#（3）函数指针" class="headerlink" title="（3）函数指针"></a>（3）函数指针</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> (*p)(<span class="hljs-type">int</span> a,<span class="hljs-type">char</span> b);<span class="hljs-comment">// 函数指针p指向返回值类型为int的，两个参数为int和char的函数 使用方法如下， p(a,b); 或者 (*p)(a,b);</span><br></code></pre></td></tr></table></figure>
+
+<p>void *类型可以指向任何一个类型的指针</p>
+<p><code>void (*signal(int sig, void (*func) (int))) (int)</code></p>
+<p><strong>signal仍然是一个函数</strong>，他返回一个函数指针，这个指针指向的函数没有返回值，只有一个int类型的参数</p>
+<h3 id="（4）二维数组"><a href="#（4）二维数组" class="headerlink" title="（4）二维数组"></a>（4）二维数组</h3><p><code>a[5][7];//用指针访问就是*（*（p+5）+7） int (*p)[7]=a;</code></p>
+<h3 id="（5）字符数组与指向字符串指针的问题"><a href="#（5）字符数组与指向字符串指针的问题" class="headerlink" title="（5）字符数组与指向字符串指针的问题"></a>（5）字符数组与指向字符串指针的问题</h3><p>其中<code>char *p=&quot;linux&quot;</code> 这种情况字符串Linux只存在于只读数据段中（rodata），所以p所指向的内容不可以被更改，如<code>*（p+1）=a;</code>这是实现不了的，但是可以更改指针p 指向的地址，例如p&#x3D;”mengchao”,但是这里的p&#x3D;”mengchao”这段话放在子函数中是不可以的，字符串mengchao是存在于栈中，子函数结束就被释放了，不能够达到改变的目的。可以使用二重指针来实现。</p>
+<p>char p[]&#x3D;”linux” 这个是字符数组，相当于初始化数组，可以更改内容，如p[1]&#x3D;’a’;* 这里Linux存在于栈上</p>
+<p><strong>所以有的字符串操作函数例如</strong>​<strong>​<code>char *strcat(char *dst,char const *src);</code>​</strong>​<strong>前面的参数dst,需要修改，只能传数组，不能直接传一个字符串，因为字符串不可改变</strong></p>
+<p>所以想修改字符串，请将他放在字符数组中。 另外关于这个程序</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> c = <span class="hljs-string">&#x27;a&#x27;</span>; <span class="hljs-type">char</span> *p = &amp;c;<br><span class="hljs-type">char</span> *q = <span class="hljs-string">&quot;china&quot;</span>; <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%p\n&quot;</span>,p);     <span class="hljs-comment">//006DFEE7 </span><br><span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%c\n&quot;</span>,*p);    <span class="hljs-comment">//a </span><br><span class="hljs-built_in">cout</span> &lt;&lt; *p &lt;&lt; <span class="hljs-built_in">endl</span>;   <span class="hljs-comment">//a </span><br><span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%p\n&quot;</span>,q);     <span class="hljs-comment">//004B9024 </span><br><span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s\n&quot;</span>,q);     <span class="hljs-comment">//china </span><br><span class="hljs-built_in">cout</span> &lt;&lt; q &lt;&lt; <span class="hljs-built_in">endl</span>;    <span class="hljs-comment">//china </span><br><span class="hljs-built_in">cout</span> &lt;&lt; *q &lt;&lt; <span class="hljs-built_in">endl</span>;   <span class="hljs-comment">//c</span><br></code></pre></td></tr></table></figure>
+
+<p>这里想插一句关于strlen和sizeof的区别。比如我们定义char buf[100]&#x3D;{“helloworld”}; strlen(buf);就是里边字符串的长度，而sizeof(buf);就是数组长度100.</p>
+<p><strong>一定程度上可以认为一级指针与一维数组名等价，二级指针与指针数组名等价，数组指针与二维数组名等价。而二级指针和二维数组名没有一毛钱关系。</strong></p>
+<h3 id="（6）数组名"><a href="#（6）数组名" class="headerlink" title="（6）数组名"></a>（6）数组名</h3><p>数组名可以看成是首元素的首地址，也可以当成一个整体来看。数组名是常量，才可以唯一的确定数组元素的起始地址。设有一维数组<code>int a[5]</code>:</p>
+<p><code>a[1] = *(a+1); //a代表首元素首地址,加1跨度为int大小为4</code></p>
+<p>对一维数组名和二维数组名引用(取地址)对一维数组名进行引用会将使其升级为二维数组名。</p>
+<p><code>(&amp;a+1)//这个东西加1，加的大小是整个数组的大小，是20.</code></p>
+<p>二维数组名解引用，降维为一维数组名。二维数组名是首元素首地址，设有<code>int a[4][3]</code>,则</p>
+<p><code>*(a+1) //代表的是二维数组的第二维 a[1][2] = *(*(a+1)+2)</code></p>
+<p>注意下面的问题</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">*p++：等同于：*p;  p += <span class="hljs-number">1</span>;先运算再++ <br>解析：实际上*p++符号整体对外表现的值是*p的值，运算完成后p再加<span class="hljs-number">1.</span> 【注意】是运算后p再加<span class="hljs-number">1</span>，而不是p所指向的变量*p再加<span class="hljs-number">1</span> <br><br>*++p：等同于 p += <span class="hljs-number">1</span>;    <br>*p;先++再运算 解析：由于++在p的前面，++前置的含义是，先加<span class="hljs-number">1</span>，得到一个新的p（它的值是原来p的值加<span class="hljs-number">1</span>）。然后这个新的p再与前面的*结合. <br><br>【总结】无论是*p++还是*++p，都是指针p += <span class="hljs-number">1</span>，即p的值+<span class="hljs-number">1</span>，而不是p所指向的变量*p的值+<span class="hljs-number">1</span>。 ++前置与++后置，只是决定了到底是先p += <span class="hljs-number">1</span>，还是先*p。++前置表示先p += <span class="hljs-number">1</span>，再*p。++后置表示先*p，在p += <span class="hljs-number">1</span>； --前置与--后置的的分析方法++前置与++后置的一样。<br></code></pre></td></tr></table></figure>
+
+<h2 id="2、进程空间"><a href="#2、进程空间" class="headerlink" title="2、进程空间"></a>2、进程空间</h2><p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog5b809e6f908834233029fd990bccc4d5.png"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">全局变量：不初始化的默认为<span class="hljs-number">0</span>，放在.bss段，初始化为<span class="hljs-number">0</span>的也放在.bss段 <br>初始化为非<span class="hljs-number">0</span>的全局变量放在.data段中，生命周期全局 <br>局部变量放在栈上，当调用结束，生命周期结束<br></code></pre></td></tr></table></figure>
+
+<h2 id="3、结构体"><a href="#3、结构体" class="headerlink" title="3、结构体"></a>3、结构体</h2><p>《道德经》 曰：”一生二，二生三，三生万物”。结构体用关键字 struct 定义，表达出多个不同变量在一起的类型。我们由此可以使用struct自定义几乎所有想要的类型。</p>
+<p>结构体的定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">student</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">char</span> name[<span class="hljs-number">30</span>];<br>  <span class="hljs-type">char</span> sex;<br>  <span class="hljs-type">int</span> age;<br>  <span class="hljs-type">float</span> high;<br>&#125;stu1;<span class="hljs-comment">//这里定义了一个变量stu1</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">student</span> <span class="hljs-title">stu2</span>;</span><span class="hljs-comment">//这里定义了一个变量stu2</span><br></code></pre></td></tr></table></figure>
+
+<p>这种定义出来的结构体类型在定义变量时必须跟着struct，就像<code>struct student stu1;</code>一样，我们引入typedef，避免这种情况。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">student</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">char</span> name[<span class="hljs-number">30</span>];<br>  <span class="hljs-type">char</span> sex;<br>  <span class="hljs-type">int</span> age;<br>  <span class="hljs-type">float</span> high;<br>&#125;STUDENT;<span class="hljs-comment">//将struct student类型重命名为STUDENT</span><br>STUDENT stu, stu2;<span class="hljs-comment">//使用STUDENT替换struct student定义变量</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="结构体变量初始化及成员访问"><a href="#结构体变量初始化及成员访问" class="headerlink" title="结构体变量初始化及成员访问"></a>结构体变量初始化及成员访问</h3><p>定义的结构体变量用点成员运算符（.）访问成员变量，比如<code>stu.sex</code>就这样访问成员变量。如果是结构体类型的指针变量则使用-&gt;访问成员变量。<code>STUDENT stu; stu-&gt;sex = &#39;x&#39;;</code>初始化大概有三种方法。</p>
+<p>举例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">typede <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">block</span> &#123;</span> <br>  <span class="hljs-type">char</span> name[<span class="hljs-number">32</span>];   <br>  <span class="hljs-type">int</span> type;   <br>  <span class="hljs-type">int</span> size; <br> &#125;block;<br></code></pre></td></tr></table></figure>
+
+<p>方法一：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">block test = &#123;<span class="hljs-string">&quot;version&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-number">32</span>&#125;； 需要注意对应的顺序，不能错位。<br></code></pre></td></tr></table></figure>
+
+<p>方法二：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">block test; <br>test.name = <span class="hljs-string">&quot;version&quot;</span>; <br>test.type = <span class="hljs-number">1</span>; <br>test.size= <span class="hljs-number">3</span>;<br></code></pre></td></tr></table></figure>
+
+<p>方法三：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">block  test = &#123;  <br>  .type= <span class="hljs-number">1</span>,  <br>  .size = <span class="hljs-number">12</span>,  <br>  .name= <span class="hljs-string">&quot;version&quot;</span> <br> &#125;;<br></code></pre></td></tr></table></figure>
+
+<h3 id="结构体大小"><a href="#结构体大小" class="headerlink" title="结构体大小"></a>结构体大小</h3><p>设计内存对齐</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Date</span> &#123;</span>     <br>  <span class="hljs-type">char</span> a;<br>  <span class="hljs-type">int</span> b;<br>  <span class="hljs-type">int64_t</span> c;  <br>  <span class="hljs-type">char</span> d;<br>&#125;; <br>Date data [<span class="hljs-number">2</span>][<span class="hljs-number">10</span>];<br></code></pre></td></tr></table></figure>
+
+<p>结构体所占的内存大小 a.整体所占的内存大小应该是结构中成员类型最大的整数倍，此处最大的类型是int_64t，占8个字节。即最后所占字节的总数应该是8的倍数，不足的补足 b.数据对齐原则-内存按结构体成员的先后顺序排列，当排到该成员变量时，其前面所有成员已经占用的空间大小必须是该成员类型大小的整数倍，如果不够，则前面的成员占用的空间要补齐，使之成为当前成员类型的整数倍。假设是地址是从0开始，结构体中第一个成员类型char型占一个字节，则内存地址0-1，第二成员从2开始，int型所占内存4个字节根据原则b，第一个成员所占内存补齐4的倍数，故第一个成员所占内存:1＋3＝4；第二个成员占5-8.第三个成员占8个字节，满足原则b，不需要补齐，占9-16第四个成员占一个字节，占17.故总内存为1＋3＋4＋8＋1＝17个字节，但根据原则1总字节数需是8的倍数，需将17补齐到24.故此结构体总字节数为:24字节</p>
+<h2 id="4、一些关键字的详解"><a href="#4、一些关键字的详解" class="headerlink" title="4、一些关键字的详解"></a>4、一些关键字的详解</h2><h3 id="inline"><a href="#inline" class="headerlink" title="inline"></a>inline</h3><p>在c&#x2F;c++中，为了解决一些频繁调用的小函数大量消耗栈空间（栈内存）的问题，特别的引入了inline修饰符，表示为内联函数。栈空间就是指放置程序的局部数据（也就是函数内数据）的内存空间。 inline的使用是有所限制的，inline只适合涵数体内代码简单的涵数使用，不能包含复杂的结构控制语句例如while、switch，并且不能内联函数本身不能是直接递归函数（即，自己内部还调用自己的函数）。 inline函数仅仅是一个对编译器的建议，所以最后能否真正内联，看编译器的意思，它如果认为函数不复杂，能在调用点展开，就会真正内联，并不是说声明了内联就会内联，声明内联只是一个建议而已。</p>
+<h3 id="inline函数的定义放在头文件中"><a href="#inline函数的定义放在头文件中" class="headerlink" title="inline函数的定义放在头文件中"></a>inline函数的定义放在头文件中</h3><p>其次，因为内联函数要在调用点展开，所以编译器必须随处可见内联函数的定义，要不然就成了非内联函数的调用了。所以，这要求每个调用了内联函数的文件都出现了该内联函数的定义。 因此，将内联函数的定义放在头文件里实现是合适的，省却你为每个文件实现一次的麻烦。 声明跟定义要一致：如果在每个文件里都实现一次该内联函数的话，那么，最好保证每个定义都是一样的，否则，将会引起未定义的行为。如果不是每个文件里的定义都一样，那么，编译器展开的是哪一个，那要看具体的编译器而定。所以，最好将内联函数定义放在头文件中。</p>
+<p>注：之所以定义放在头文件中，是因为inline是在编译阶段展开的，并不是连接源文件。</p>
+<h3 id="static"><a href="#static" class="headerlink" title="static"></a>static</h3><p>static别的东西不想说，就说static在修饰局部变量的时候，函数结束此时局部变量并不会被释放，并且修饰的局部变量的值是一直保存的，类似于全局变量，但是还是只能在这个函数内才能访问</p>
+<h3 id="const"><a href="#const" class="headerlink" title="const"></a>const</h3><p>const又叫常变量，修饰的变量一般不能被更改。但是在C语言中这是假的，通过定义一个指针，修改指针指向的内存依旧可以更改const修饰的变量。在C++中才是真正的const，无法修改。 const一般出现在参数列表中，意味着这个变量在函数中并不会被修改，是输入型参数。</p>
+<h3 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h3><p>这个volatile，英文名易变的。因为访问寄存器要比访问内存单元快的多,所以编译器一般都会作减少存取内存的优化，但有可能会读脏数据。当要求使用volatile声明变量值的时候，系统总是重新从它所在的内存读取数据，即使它前面的指令刚刚从该处读取过数据。 精确地说就是，遇到这个关键字声明的变量，编译器对访问该变量的代码就不再进行优化，从而可以提供对特殊地址的稳定访问；如果不使用valatile，则编译器将对所声明的语句进行优化。</p>
+<h2 id="5、多文件编程"><a href="#5、多文件编程" class="headerlink" title="5、多文件编程"></a>5、多文件编程</h2><p>一个简单的例子 全局变量最好声明为 static，只在当前文件中可见，不要对外暴露；如果必须对外暴露，可以使用宏定义代替，全局变量最好只在本文件内使用，如果其他文件必须使用，最好封装get接口set接口，请看下面的代码。 main.c 源码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;conio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;module.h&quot;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">int</span> n1 = <span class="hljs-number">1</span>, n2 = <span class="hljs-number">100</span>;<br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;从%d 加到%d 的和为%ld [By %s]&quot;</span>, n1, n2, sum(n1, n2), OS);<br>  getch();<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>module.c 源码：如果使用了头文件中的宏定义，这里也是需要包含头文件的</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;module.h&quot;</span></span><br><br><span class="hljs-type">long</span> <span class="hljs-title function_">sum</span><span class="hljs-params">(<span class="hljs-type">int</span> fromNum, <span class="hljs-type">int</span> endNum)</span><br>&#123;<br>  <span class="hljs-type">int</span> i;<br>  <span class="hljs-type">long</span> result = <span class="hljs-number">0</span>;<br>  <span class="hljs-comment">// 参数不符合规则，返回 -1</span><br>  <span class="hljs-keyword">if</span>(fromNum&lt;<span class="hljs-number">0</span> || endNum&lt;<span class="hljs-number">0</span> || endNum&lt;fromNum)&#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">for</span>(i=fromNum; i&lt;=endNum; i++)&#123;<br>    result += i;<br>  &#125;<br>  <span class="hljs-comment">// 返回大于等于 0 的值</span><br>  <span class="hljs-keyword">return</span> result;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>module.h 源码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> __MODULE_H_ </span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __MODULE_H_ </span><br><span class="hljs-comment">// 用宏定义来代替全局变量 </span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> OS <span class="hljs-string">&quot;Windows 7&quot;</span> </span><br><span class="hljs-comment">// 也可以省略 extern；不过为了程序可读性，建议写上 </span><br><span class="hljs-keyword">extern</span> <span class="hljs-type">long</span> <span class="hljs-title function_">sum</span><span class="hljs-params">(<span class="hljs-type">int</span>, <span class="hljs-type">int</span>)</span>;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+
+<p>多个.c文件的时候，也可以只用一个.h头文件，然后都包含一下这个.h文件</p>
+<h2 id="6、文件操作"><a href="#6、文件操作" class="headerlink" title="6、文件操作"></a>6、文件操作</h2><p><a target="_blank" rel="noopener external nofollow noreferrer" href="https://www.cnblogs.com/wuqianling/p/5340719.html">https://www.cnblogs.com/wuqianling/p/5340719.html</a>这篇文章写的就不错。</p>
+<p>主要是文件操作分为二进制文件和文本文件，fopen打开的时候设置打开模式，返回值问FILE*类型的一个文件指针。通过这个文件指针就可以访问这个文件。</p>
+<h2 id="7、编码规范"><a href="#7、编码规范" class="headerlink" title="7、编码规范"></a>7、编码规范</h2><ul>
+<li>for while等关键字和括号之间留出一个空格，突出关键字，for后哪怕只有一行也写{}</li>
+<li>注释的双斜线之后要有一个空格，突出注释</li>
+<li>函数名和类使用大驼峰命名法首个单词大写，变量使用小驼峰命名法第一个字母小写</li>
+<li>类和函数写完之后要空一行</li>
+<li>分号、逗号前边不空格，后边留空格。双目运算符两边留空格</li>
+</ul>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/posts/%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0.html">字符串函数</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/posts/1.html">proc目录下pid各文件目录含义</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\posts\动态链接库、静态链接库.html" title="动态链接库、静态链接库"><span class="title">动态链接库、静态链接库</span></a><a class="item" href="\posts\字符串函数.html" title="字符串函数"><span class="title">字符串函数</span></a><a class="item" href="\posts\预处理、编译、汇编、链接.html" title="预处理、编译、汇编、链接"><span class="title">预处理、编译、汇编、链接</span></a><a class="item" href="\posts\内存申请函数.html" title="内存申请函数"><span class="title">内存申请函数</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/topic/">专栏</a><a href="/archives/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/mengchao666/Linux-0.11code">Linux 0.11</a></div><div class="sitemap-group"><span class="fs15">探索</span><a href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html">站点</a><a href="/explore/notes/%E6%8E%A2%E7%B4%A2%E8%80%85%E7%AC%94%E8%AE%B0.html">笔记</a></div><div class="sitemap-group"><span class="fs15">友链</span><a href="/about/">朋友圈</a></div></div><div class="text"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/assets/images/keyboard.jpg" alt="描述文字" style="float: right; width: 60px; margin-left: 20px;">
+<center>
+  <div>
+    <div>
+      © 2024
+      <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com">mengchao666</a>
+      开心地使用 <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/xaoxuu/hexo-theme-stellar">Stellar</a>
+      主题，星际地球第<span id="runtime_span"></span>
+    </div>
+    <script type="text/javascript">
+      function show_runtime() {
+          window.setTimeout("show_runtime()", 1000);
+          X = new Date("08/18/2024 00:00:00");
+          Y = new Date();
+          T = (Y.getTime() - X.getTime());
+          M = 24 * 60 * 60 * 1000;
+          a = T / M;
+          A = Math.floor(a);
+          runtime_span.innerHTML = A + "天"
+      }
+      show_runtime();
+    </script>
+  </div>
+</center>
+<div class="totalcount" style="text-align:center">收集了 31 颗星星 ✧ </span><span class="post-count">共 36.1k 粒星尘，好像写完一本 鲁迅 的《呐喊》了啊</div></div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="true"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81C%E8%AF%AD%E8%A8%80%E7%9A%84%E7%B2%BE%E9%AB%93%E2%80%93%E6%8C%87%E9%92%88"><span class="toc-text">1、C语言的精髓–指针</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E6%8C%87%E9%92%88%E6%95%B0%E7%BB%84"><span class="toc-text">（1）指针数组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E6%95%B0%E7%BB%84%E6%8C%87%E9%92%88"><span class="toc-text">（2）数组指针</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E5%87%BD%E6%95%B0%E6%8C%87%E9%92%88"><span class="toc-text">（3）函数指针</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%884%EF%BC%89%E4%BA%8C%E7%BB%B4%E6%95%B0%E7%BB%84"><span class="toc-text">（4）二维数组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%885%EF%BC%89%E5%AD%97%E7%AC%A6%E6%95%B0%E7%BB%84%E4%B8%8E%E6%8C%87%E5%90%91%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%8C%87%E9%92%88%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">（5）字符数组与指向字符串指针的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EF%BC%886%EF%BC%89%E6%95%B0%E7%BB%84%E5%90%8D"><span class="toc-text">（6）数组名</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E8%BF%9B%E7%A8%8B%E7%A9%BA%E9%97%B4"><span class="toc-text">2、进程空间</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E7%BB%93%E6%9E%84%E4%BD%93"><span class="toc-text">3、结构体</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E5%8F%98%E9%87%8F%E5%88%9D%E5%A7%8B%E5%8C%96%E5%8F%8A%E6%88%90%E5%91%98%E8%AE%BF%E9%97%AE"><span class="toc-text">结构体变量初始化及成员访问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E5%A4%A7%E5%B0%8F"><span class="toc-text">结构体大小</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81%E4%B8%80%E4%BA%9B%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E8%AF%A6%E8%A7%A3"><span class="toc-text">4、一些关键字的详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#inline"><span class="toc-text">inline</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#inline%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9A%E4%B9%89%E6%94%BE%E5%9C%A8%E5%A4%B4%E6%96%87%E4%BB%B6%E4%B8%AD"><span class="toc-text">inline函数的定义放在头文件中</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#static"><span class="toc-text">static</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#const"><span class="toc-text">const</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#volatile"><span class="toc-text">volatile</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5%E3%80%81%E5%A4%9A%E6%96%87%E4%BB%B6%E7%BC%96%E7%A8%8B"><span class="toc-text">5、多文件编程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6%E3%80%81%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C"><span class="toc-text">6、文件操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7%E3%80%81%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83"><span class="toc-text">7、编码规范</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+  <widget class="widget-wrapper categories-widget">
+    <div class="widget-header categories-header dis-select">
+      <span class="name">分类索引</span>
+    </div>
+    <div class='post-list'>
+      <article class='' id='cats'>
+        
+          <div>
+            <a class="cat" href="/categories/C%E8%AF%AD%E8%A8%80/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>C语言</span>
+              <span class='badge'>(5)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux</span>
+              <span class='badge'>(3)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux%E5%B7%A5%E5%85%B7/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux工具</span>
+              <span class='badge'>(15)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Makefile/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Makefile</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/dm-verity/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>dm-verity</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/git/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>git</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E4%BA%8C%E5%8F%89%E6%A0%91/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>二叉树</span>
+              <span class='badge'>(4)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E7%BD%91%E7%AB%99/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>网站</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+      </article>
+    </div>
+  </widget>
+
+
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"codeblock":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'light'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"twikoo":{"js":"/js/services/twikoo_new.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+
+
+
+<!-- inject -->
+<script src="/js/custom.js"></script><script src="/js/code-block.js"></script><script src="https://cdn.jsdelivr.net/gh/huangwb8/bloghelper@latest/js/input-with-fire.js"></script><script src="https://cdn.staticfile.org/jquery/3.6.3/jquery.min.js"></script><script src="/static/js/snow.js"></script>
+</div><!-- hexo injector body_end start -->
+  <script>
+    mediumZoom(".l_body .content p img", { background: "var(--site-bg)" })
+  </script>
+  <!-- hexo injector body_end end --></body></html>
+<script>var posts=["posts/94、二叉树的中序遍历.html","posts/96、不同的二叉搜索树.html","posts/Makefile基础语法.html","posts/addr2line.html","posts/OOM.html","posts/dd命令.html","posts/98、验证二叉搜索树.html","posts/ftpget.html","/posts/1.html","posts/dm-verity.html","posts/find.html","posts/nm.html","posts/grep.html","/posts/1.html","posts/objdump.html","posts/readelf.html","posts/scp.html","posts/tar.html","posts/sed.html","posts/top.html","posts/tcpdump.html","posts/内存检测工具.html","posts/objcopy.html","posts/动态链接库、静态链接库.html","posts/字符串函数.html","posts/指针.html","posts/二叉树算法核心纲领.html","posts/网站部署-写作.html","posts/预处理、编译、汇编、链接.html","posts/内存申请函数.html","/posts/1.html"];function toRandomPost(){ window.location.href = window.location.origin + posts[Math.floor(Math.random()*posts.length)]; };</script>
