@@ -20,12 +20,12 @@
   <title>dm-verity - mengchao666</title>
 
   
-    <meta name="description" content="一、技术模块简介 Dm-verity 是 device-mapper 架构下的一个目标设备类型， 通过它来保障设备或者设备分区的完整性。 Dm-verity类型的目标设备有两个底层设备，一个是数据设备(data device), 是用来存储实际数据的，另一个是hash设备(hash device), 用来存储hash数据的，这个是用来校验data device数据的完整性的。 简单的架构图如下：">
+    <meta name="description" content="一、技术模块简介 Dm-verity 是 device-mapper 架构下的一个目标设备类型， 通过它来保障设备或者设备分区的完整性。 dm-verity通常用于验证镜像的完整性。比如常规的系统启动的对根文件系统的验签，耗时很长。可以使用dm-verity替代，由于dm-verity是使用时才进行hash计算校验，所以对启动性能的提高有很大帮助。 Dm-verity类型的目标设备有两个底层设备，">
 <meta property="og:type" content="article">
 <meta property="og:title" content="dm-verity">
 <meta property="og:url" content="http://example.com/posts/dm-verity.html">
 <meta property="og:site_name" content="mengchao666">
-<meta property="og:description" content="一、技术模块简介 Dm-verity 是 device-mapper 架构下的一个目标设备类型， 通过它来保障设备或者设备分区的完整性。 Dm-verity类型的目标设备有两个底层设备，一个是数据设备(data device), 是用来存储实际数据的，另一个是hash设备(hash device), 用来存储hash数据的，这个是用来校验data device数据的完整性的。 简单的架构图如下：">
+<meta property="og:description" content="一、技术模块简介 Dm-verity 是 device-mapper 架构下的一个目标设备类型， 通过它来保障设备或者设备分区的完整性。 dm-verity通常用于验证镜像的完整性。比如常规的系统启动的对根文件系统的验签，耗时很长。可以使用dm-verity替代，由于dm-verity是使用时才进行hash计算校验，所以对启动性能的提高有很大帮助。 Dm-verity类型的目标设备有两个底层设备，">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog2bca569a67ffab1bb48b246e4d57cb2a.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog519d5a05bc1dbd5572a92395a526d2d1.png">
@@ -37,7 +37,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/bloge0642548438f6e608b96e333d12f12cd.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog08c1b4ed417142d1c73e3a90a6e99bb8.png">
 <meta property="article:published_time" content="2024-11-24T14:09:23.000Z">
-<meta property="article:modified_time" content="2024-11-24T14:12:24.381Z">
+<meta property="article:modified_time" content="2024-11-24T14:32:49.559Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="hexo-theme-stellar,刷题,项目">
 <meta name="twitter:card" content="summary">
@@ -119,7 +119,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/dm-verity.html">Linux</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-24T14:09:23.000Z">2024-11-24</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-24T14:12:24.381Z">2024-11-24</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-24T14:09:23.000Z">2024-11-24</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-24T14:32:49.559Z">2024-11-24</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -132,6 +132,7 @@
   </div>
   </div><article class="md-text content"><p><strong>一、技术模块简介</strong></p>
 <p>Dm-verity 是 device-mapper 架构下的一个目标设备类型， 通过它来保障设备或者设备分区的完整性。</p>
+<p>dm-verity通常用于验证镜像的完整性。比如常规的系统启动的对根文件系统的验签，耗时很长。可以使用dm-verity替代，由于dm-verity是使用时才进行hash计算校验，所以对启动性能的提高有很大帮助。</p>
 <p>Dm-verity类型的目标设备有两个底层设备，一个是数据设备(data device), 是用来存储实际数据的，另一个是hash设备(hash device), 用来存储hash数据的，这个是用来校验data device数据的完整性的。</p>
 <p>简单的架构图如下：</p>
 <p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog2bca569a67ffab1bb48b246e4d57cb2a.png"></p>
@@ -143,7 +144,7 @@
 <p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog519d5a05bc1dbd5572a92395a526d2d1.png"></p>
 <p>(图来自：<a target="_blank" rel="noopener external nofollow noreferrer" href="https://source.android.com/security/verifiedboot/dm-verity">https://source.android.com/security/verifiedboot/dm-verity</a>)</p>
 <p>简单说明一下这个插图背后的原理：</p>
-<p>在编译阶段，首先会对系统镜像(比如system.img、vendor.img)按照每4k大小计算对应hash，将这些hash信息存起来，形成上面图中的layer 0层，紧接着会对 layer 0 层同样按照每4k大小计算hash，并将这层的hash信息存起来，形成layer 1层，以此类推，直至最后的hash信息存放在一个4k大小的块中(未填满使用0填充)，这里边存储的hash信息称为 root hash。</p>
+<p>在编译(一般应该是运行open)阶段，首先会对系统镜像(比如system.img、vendor.img)按照每4k大小计算对应hash，将这些hash信息存起来，形成上面图中的layer 0层，紧接着会对 layer 0 层同样按照每4k大小计算hash，并将这层的hash信息存起来，形成layer 1层，以此类推，直至最后的hash信息存放在一个4k大小的块中(未填满使用0填充)，这里边存储的hash信息称为 root hash。</p>
 <p>在运行阶段，对于镜像里的文件进行访问时，操作对应所在块设备的存储区域时，会计算当前存储块(按4k大小)的hash值，然后会跟存储在哈希树上对应块的hash值进行比较，如果匹配不上，则认为当前该文件在底层存储被篡改或是损坏了。</p>
 <p>为了更形象的描述下镜像运行时如何利用哈希树做校验的，下面以一个1G大小的镜像为例，来说明一下这个过程：</p>
 <p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog3d6e32d1e4c62a2528f3f83da22eea6a.png"></p>
@@ -153,7 +154,7 @@
 <p>3）对第一层存储 hash 值的数据块进行第二层(Level 1) 的 hash 计算，同理，计算这 2048 块hash数据块需要花费 16 块</p>
 <p>4）对第二层存储 hash 值的数据块进行第三层(Level 2) 的 hash 计算，由于第二层的hash数据块小于128块，所以第三层是最后一层，直接计算得到 root hash 数据块(不够4K大小补齐0)。</p>
 <p>细心的读者可能已经发现了，Level 0 层其实已经包含了所有raw data数据块的hash信息了，也就说明Level 0 层已经具备可以验证 raw data 的能力了，为何还需要在 Level 0 的基础上继续算hash组装下一个 Level 层级呢？</p>
-<p>这里要引入一个安全策略设计问题，镜像raw data数据块是由对应的hash信息来校验保证的，为了保证镜像raw data是我们“想要的”，我们还需要对 hash 信息进行合法性验证，简单理解就是要确认这个hash信息是我们“想要的”， 方法就是对这个hash信息再次计算一次hash值，这里称为 root hash，然后添加一些类似于签名保护并保存起来，主要是为了防止 root hash 被非法篡改。在一次 raw data 数据块的校验过程中，需要对 hash 信息计算一次 hash，然后跟保存的 root hash 进行比较，验证了 hash 信息的合法性之后，再来校验对应的 raw data 数据块。</p>
+<p>这里要引入一个安全策略设计问题，镜像raw data数据块是由对应的hash信息来校验保证的，为了保证镜像raw data是我们“想要的”，我们还需要对 hash 信息进行合法性验证，简单理解就是要确认这个hash信息是我们“想要的”， 方法就是对这个hash信息再次计算一次hash值，这里称为 root hash，然后添加一些类似于签名保护并保存起来<strong>（通常在实际工作中，在镜像编译阶段将root hash计算出来，保存在镜像的某个地方，通过cms等签名方式保存，启动阶段会进行cms验签以保证root_hash的正确性）</strong>，主要是为了防止 root hash 被非法篡改。在一次 raw data 数据块的校验过程中，需要对 hash 信息计算一次 hash，然后跟保存的 root hash 进行比较，验证了 hash 信息的合法性之后，再来校验对应的 raw data 数据块。</p>
 <p>有了以上背景，再回到刚刚这个“为何还需要在 Level 0 的基础上继续算hash组装下一个 Level 层级”的问题，按照上面的安全策略，如果 hash 信息只有 Level 0 一层的话，接下来对 raw data 数据块的校验将会是这样：每操作一个raw data数据块，都需要计算一次 Level 0 的 hash 值，跟 root hash 进行比较，验证合法之后再对 raw data 数据块进行校验。本文中举例是 1G 的镜像，Level 0用来保存 hash 信息的数据块已经达到 2048 块，如果对面对更大的镜像，Level 0 所占的数据块也会更大，如果是按照上面的计算方法，对 raw data 数据块的校验效率将会非常非常低。</p>
 <p>作为对比，哈希树机制是如何体现出效率呢，下面以具体某一块 raw data 数据块的读取过程来说明其设计原理：</p>
 <p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogafbc138ead05da1b26f41abf1b5c35f9.png"></p>
@@ -168,7 +169,8 @@
 <p>可以看到，在使用哈希树的设计之后，对数据块验证整个过程中，涉及到的数据块hash计算只有3块(有N层就计算N块)，相比于一层校验模式，效率要高很多。</p>
 <p><strong>三、应用层面</strong></p>
 <p>读者到目前为止应该大致了解到了移动终端在镜像完整性校验上相关的设计原理，接下来会从应用端层面来说明如何使用 dm-verity 底层提供的接口来初始化 dm 设备，并为后续实时校验做好准备，内核绝大多数功能模块存在的意义都要靠跟应用端的交互来体现，作为对内核某个模块的研究，初步从应用层出发不乏是一个好办法。</p>
-<p>应用层主要有以下3个步骤：</p>
+<p>通常系统启动阶段，使用veritysetup工具指定data device和hash device，以及指定的root hash值，hash device的具体位置，hash device通常位于data device的后面一部分。通过veritysetup工具执行后，会生成dm设备，如我们原来使用的文件系统为&#x2F;dev&#x2F;sda3，则此时可以生成一个dm设备为sda3-dm，后续通过mount挂载sda3-dm到&#x2F;sysroot即可实现挂载根文件系统，后续读取根文件系统数据，均会通过sda3-dm设备中转，通过IO定向映射访问&#x2F;dev&#x2F;sda3，并进行hash校验</p>
+<p>如下为veritysetup应用层的3个常规步骤：</p>
 <p>步骤一. Create dm device</p>
 <p>创建 dm 设备主要有如下小步骤：</p>
 <ol>
@@ -266,7 +268,7 @@
     </script>
   </div>
 </center>
-<div class="totalcount" style="text-align:center">收集了 10 颗星星 ✧ </span><span class="post-count">共 12.7k 粒星尘，好像写完一本 鲁迅 的《呐喊》了啊</div></div></footer>
+<div class="totalcount" style="text-align:center">收集了 10 颗星星 ✧ </span><span class="post-count">共 13k 粒星尘，好像写完一本 鲁迅 的《呐喊》了啊</div></div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
@@ -778,4 +780,4 @@
     mediumZoom(".l_body .content p img", { background: "var(--site-bg)" })
   </script>
   <!-- hexo injector body_end end --></body></html>
-<script>var posts=["posts/94、二叉树的中序遍历.html","posts/98、验证二叉搜索树.html","posts/Makefile基础语法.html","posts/addr2line.html","posts/dd命令.html","posts/二叉树算法核心纲领.html","posts/dm-verity.html","posts/网站部署-写作.html","/posts/1.html","posts/96、不同的二叉搜索树.html"];function toRandomPost(){ window.location.href = window.location.origin + posts[Math.floor(Math.random()*posts.length)]; };</script>
+<script>var posts=["posts/94、二叉树的中序遍历.html","posts/Makefile基础语法.html","posts/addr2line.html","posts/dd命令.html","posts/dm-verity.html","/posts/1.html","posts/网站部署-写作.html","posts/98、验证二叉搜索树.html","posts/96、不同的二叉搜索树.html","posts/二叉树算法核心纲领.html"];function toRandomPost(){ window.location.href = window.location.origin + posts[Math.floor(Math.random()*posts.length)]; };</script>
