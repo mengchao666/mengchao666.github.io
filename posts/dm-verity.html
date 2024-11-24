@@ -17,27 +17,35 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
   
-  <title>96、不同的二叉搜索树 - mengchao666</title>
+  <title>dm-verity - mengchao666</title>
 
   
-    <meta name="description" content="一、题目描述给你一个整数 n ，求恰由 n 个节点组成且节点值从 1 到 n 互不相同的 二叉搜索树 有多少种？返回满足题意的二叉搜索树的种数。 示例 1：输入：n &#x3D; 3输出：5示例 2： 输入：n &#x3D; 1输出：1 提示：1 &lt;&#x3D; n &lt;&#x3D; 19 二、C++代码解法一： 这种题目，我一般是计算出前面多个例子，根据计算出来的多个例子，进行归纳总结">
+    <meta name="description" content="一、技术模块简介 Dm-verity 是 device-mapper 架构下的一个目标设备类型， 通过它来保障设备或者设备分区的完整性。 Dm-verity类型的目标设备有两个底层设备，一个是数据设备(data device), 是用来存储实际数据的，另一个是hash设备(hash device), 用来存储hash数据的，这个是用来校验data device数据的完整性的。 简单的架构图如下：">
 <meta property="og:type" content="article">
-<meta property="og:title" content="96、不同的二叉搜索树">
-<meta property="og:url" content="http://example.com/posts/96%E3%80%81%E4%B8%8D%E5%90%8C%E7%9A%84%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91.html">
+<meta property="og:title" content="dm-verity">
+<meta property="og:url" content="http://example.com/posts/dm-verity.html">
 <meta property="og:site_name" content="mengchao666">
-<meta property="og:description" content="一、题目描述给你一个整数 n ，求恰由 n 个节点组成且节点值从 1 到 n 互不相同的 二叉搜索树 有多少种？返回满足题意的二叉搜索树的种数。 示例 1：输入：n &#x3D; 3输出：5示例 2： 输入：n &#x3D; 1输出：1 提示：1 &lt;&#x3D; n &lt;&#x3D; 19 二、C++代码解法一： 这种题目，我一般是计算出前面多个例子，根据计算出来的多个例子，进行归纳总结">
+<meta property="og:description" content="一、技术模块简介 Dm-verity 是 device-mapper 架构下的一个目标设备类型， 通过它来保障设备或者设备分区的完整性。 Dm-verity类型的目标设备有两个底层设备，一个是数据设备(data device), 是用来存储实际数据的，另一个是hash设备(hash device), 用来存储hash数据的，这个是用来校验data device数据的完整性的。 简单的架构图如下：">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog20241117205823.png">
-<meta property="article:published_time" content="2024-11-17T12:57:49.000Z">
-<meta property="article:modified_time" content="2024-11-17T14:10:11.572Z">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog2bca569a67ffab1bb48b246e4d57cb2a.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog519d5a05bc1dbd5572a92395a526d2d1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog3d6e32d1e4c62a2528f3f83da22eea6a.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogafbc138ead05da1b26f41abf1b5c35f9.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog2fe4aca179fac7a107e2e3d05b9a6732.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogccfa2ebd83ceb9f60a306d6bc6ce6b76.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog4afc7c79fab30f870aed1bd266ea78e8.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/bloge0642548438f6e608b96e333d12f12cd.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog08c1b4ed417142d1c73e3a90a6e99bb8.png">
+<meta property="article:published_time" content="2024-11-24T14:09:23.000Z">
+<meta property="article:modified_time" content="2024-11-24T14:12:24.381Z">
 <meta property="article:author" content="John Doe">
-<meta property="article:tag" content="二叉树">
+<meta property="article:tag" content="hexo-theme-stellar,刷题,项目">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog20241117205823.png">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog2bca569a67ffab1bb48b246e4d57cb2a.png">
   
   
   
-  <meta name="keywords" content="二叉树">
+  <meta name="keywords" content="hexo-theme-stellar,刷题,项目">
 
   <!-- feed -->
   
@@ -94,7 +102,7 @@
 <nav class="menu dis-select"><a class="nav-item active" title="首页" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
 </div>
 <div class="widgets">
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：leetcode</span></div><div class="widget-body"><a class="item" href="/posts/98%E3%80%81%E9%AA%8C%E8%AF%81%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91.html"><span class="title">98、验证二叉搜索树</span></a><a class="item active" href="/posts/96%E3%80%81%E4%B8%8D%E5%90%8C%E7%9A%84%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91.html"><span class="title">96、不同的二叉搜索树</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/posts/94%E3%80%81%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E4%B8%AD%E5%BA%8F%E9%81%8D%E5%8E%86.html"><span class="title">94、二叉树的中序遍历</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Linux</span></div><div class="widget-body"><a class="item active" href="/posts/dm-verity.html"><span class="title">dm-verity</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/posts/dd%E5%91%BD%E4%BB%A4.html"><span class="title">dd命令</span></a><a class="item" href="/posts/addr2line.html"><span class="title">addr2line</span></a></div></widget>
 
 
 
@@ -110,36 +118,110 @@
 <div class="article banner top">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/98%E3%80%81%E9%AA%8C%E8%AF%81%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91.html">leetcode</a></div><div id="tag"> <span>&nbsp标签：</span><a class="cap breadcrumb-link" href="/tags/%E4%BA%8C%E5%8F%89%E6%A0%91/">二叉树</a>&nbsp</div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-17T12:57:49.000Z">2024-11-17</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-17T14:10:11.572Z">2024-11-17</time></span></div></div></div>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/dm-verity.html">Linux</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-24T14:09:23.000Z">2024-11-24</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-24T14:12:24.381Z">2024-11-24</time></span></div></div></div>
     
     <div class="bottom only-title">
       
       <div class="text-area">
-        <h1 class="text title"><span>96、不同的二叉搜索树</span></h1>
+        <h1 class="text title"><span>dm-verity</span></h1>
         
       </div>
     </div>
     
   </div>
-  </div><article class="md-text content"><h2 id="一、题目描述"><a href="#一、题目描述" class="headerlink" title="一、题目描述"></a>一、题目描述</h2><p>给你一个整数 n ，求恰由 n 个节点组成且节点值从 1 到 n 互不相同的 二叉搜索树 有多少种？返回满足题意的二叉搜索树的种数。</p>
-<p>示例 1：<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog20241117205823.png"><br>输入：n &#x3D; 3<br>输出：5<br>示例 2：</p>
-<p>输入：n &#x3D; 1<br>输出：1</p>
-<p>提示：<br>1 &lt;&#x3D; n &lt;&#x3D; 19</p>
-<h2 id="二、C-代码"><a href="#二、C-代码" class="headerlink" title="二、C++代码"></a>二、C++代码</h2><p>解法一：</p>
-<p>这种题目，我一般是计算出前面多个例子，根据计算出来的多个例子，进行归纳总结，利用数学归纳法，找规律，推算出第n个的结果，然后利用类似如下方法，根据第0个，第1个，第2个……，以此计算出第n个。</p>
-<p>n&#x3D;1,搜索二叉树种数：1 ,只有一个节点，所以为1</p>
-<p>n&#x3D;2,搜索二叉树种数：2 ,只有二个节点，要么1为根节点，要么2为根节点，所以结果为2</p>
-<p>n&#x3D;3,搜索二叉树种数：5 ,有三个节点<br>(1)、1为根节点，另外两个节点，均大于1，根据二叉搜索树的性质，大于根节点的数字，即另外两个节点2和3只能作为右子树，再作为一个整体，构成二叉搜索树，此时另外两个节点构成结果等同于n&#x3D;2时的结果，为2<br>(2)、2为根节点，根据二叉搜索树性质，1只能作为左子树，3只能作为右子树，只有一种情况，所以结果为1<br>(3)、3为根节点，根据二叉搜索树性质，1和2只能作为左子树,1和2作为一个整体再构成二叉搜索树，此时与(1)一样，结果等于n&#x3D;2时的结果为2<br>所以n&#x3D;3时，搜索二叉树种数为2+1+2&#x3D;5</p>
-<p>n&#x3D;4,搜索二叉树种数：14<br>(1)、1为根节点，另外三个节点，均大于1，另外节点只能作为右子树，其他节点再作为一个整体，构成二叉搜索树，此时另外三个节点构成结果等同于n&#x3D;3时的结果，为5<br>(2)、2为根节点，根据二叉搜索树性质，1只能作为左子树，3,4只能作为右子树，此时进行排列组合，即为n&#x3D;1和n&#x3D;2的结果相乘，为2<br>(3)、3为根节点，结果等于(2)时的结果为2<br>(3)、4为根节点，结果等于(1)时的结果为5</p>
-<p>n&#x3D;5,搜索二叉树种数：42<br>……<br>所以我总结规律为当输入数字为100,结果应该为<code>n=0 * n=99 + n=1 * n=98 + …… + n=99 * n=0</code>, n&#x3D;0时为1</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Solution</span> &#123;<br><span class="hljs-keyword">public</span>:<br>    <br>    <span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">numTrees</span><span class="hljs-params">(<span class="hljs-type">int</span> n)</span> </span>&#123;<br>        <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>;<br>        <span class="hljs-type">int</span> res = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">if</span> (n == <span class="hljs-number">0</span>) &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (n == <span class="hljs-number">1</span>) &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (n == <span class="hljs-number">2</span>) &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">2</span>;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (n == <span class="hljs-number">3</span>) &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">5</span>;<br>        &#125;<br><br>        <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; n; ++i) &#123;<br>            res += (<span class="hljs-built_in">numTrees</span>(i) * <span class="hljs-built_in">numTrees</span>(n- <span class="hljs-number">1</span> - i));<br>        &#125;<br>        <br>        <span class="hljs-keyword">return</span> res;<br>    &#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
+  </div><article class="md-text content"><p><strong>一、技术模块简介</strong></p>
+<p>Dm-verity 是 device-mapper 架构下的一个目标设备类型， 通过它来保障设备或者设备分区的完整性。</p>
+<p>Dm-verity类型的目标设备有两个底层设备，一个是数据设备(data device), 是用来存储实际数据的，另一个是hash设备(hash device), 用来存储hash数据的，这个是用来校验data device数据的完整性的。</p>
+<p>简单的架构图如下：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog2bca569a67ffab1bb48b246e4d57cb2a.png"></p>
+<p>图中映射设备(Mapper Device)和目标设备(Target Device)是一对一关系，对映射设备的读操作被映射成对目标设备的读操作，在目标设备中，dm-verity又将读操作映射为数据设备（Data Device）的读操作。但是在读操作的结束处，dm-verity加了一个额外的校验操作，对读到的数据计算一个hash值，用这个哈希值和存储在哈希设备(Hash Device)</p>
+<p><strong>二、设计原理</strong></p>
+<p>对于本文要介绍的dm-verity功能模块，笔者选择在当前移动终端应用的角度来展开讲解，也就是Android平台在dm-verity的应用。</p>
+<p>Android 端主要是在镜像启动时验证这个功能场景上使用到了 dm-verity 技术，该技术可以对块存储设备进行完整性检查，有助于阻止某些恶意程序对镜像的修改，有助于Android用户在启动设备时确认设备状态与上次使用时是否相同。在系统镜像(比如 system、vendor等)启动时以及运行时可以实时性监测当前镜像是否被篡改。</p>
+<p>通过dm-verity技术，可以确认块设备内容是否跟预期一致，具体的实现原理是利用哈希树(hashtree)做到的。用以下图来形象说明</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog519d5a05bc1dbd5572a92395a526d2d1.png"></p>
+<p>(图来自：<a target="_blank" rel="noopener external nofollow noreferrer" href="https://source.android.com/security/verifiedboot/dm-verity">https://source.android.com/security/verifiedboot/dm-verity</a>)</p>
+<p>简单说明一下这个插图背后的原理：</p>
+<p>在编译阶段，首先会对系统镜像(比如system.img、vendor.img)按照每4k大小计算对应hash，将这些hash信息存起来，形成上面图中的layer 0层，紧接着会对 layer 0 层同样按照每4k大小计算hash，并将这层的hash信息存起来，形成layer 1层，以此类推，直至最后的hash信息存放在一个4k大小的块中(未填满使用0填充)，这里边存储的hash信息称为 root hash。</p>
+<p>在运行阶段，对于镜像里的文件进行访问时，操作对应所在块设备的存储区域时，会计算当前存储块(按4k大小)的hash值，然后会跟存储在哈希树上对应块的hash值进行比较，如果匹配不上，则认为当前该文件在底层存储被篡改或是损坏了。</p>
+<p>为了更形象的描述下镜像运行时如何利用哈希树做校验的，下面以一个1G大小的镜像为例，来说明一下这个过程：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog3d6e32d1e4c62a2528f3f83da22eea6a.png"></p>
+<p>根据 hashtree 的生成方式，以 1G 的镜像为例：</p>
+<p>1）按照 4K 大小划分，将1G 大小的镜像依顺序划分可得到 262144 个 4k 大小的块</p>
+<p>2）对这 262144 块数据块进行第一层(Level 0) hash 计算，由于 SHA256(具体的hash算法可配置，此例以SHA256为参考) 计算出来的hash值占 256 个字节，一个 4K 的块可以存储 128 个hash值，所以存储这 262144 块数据块的hash值需要花费 2048 块</p>
+<p>3）对第一层存储 hash 值的数据块进行第二层(Level 1) 的 hash 计算，同理，计算这 2048 块hash数据块需要花费 16 块</p>
+<p>4）对第二层存储 hash 值的数据块进行第三层(Level 2) 的 hash 计算，由于第二层的hash数据块小于128块，所以第三层是最后一层，直接计算得到 root hash 数据块(不够4K大小补齐0)。</p>
+<p>细心的读者可能已经发现了，Level 0 层其实已经包含了所有raw data数据块的hash信息了，也就说明Level 0 层已经具备可以验证 raw data 的能力了，为何还需要在 Level 0 的基础上继续算hash组装下一个 Level 层级呢？</p>
+<p>这里要引入一个安全策略设计问题，镜像raw data数据块是由对应的hash信息来校验保证的，为了保证镜像raw data是我们“想要的”，我们还需要对 hash 信息进行合法性验证，简单理解就是要确认这个hash信息是我们“想要的”， 方法就是对这个hash信息再次计算一次hash值，这里称为 root hash，然后添加一些类似于签名保护并保存起来，主要是为了防止 root hash 被非法篡改。在一次 raw data 数据块的校验过程中，需要对 hash 信息计算一次 hash，然后跟保存的 root hash 进行比较，验证了 hash 信息的合法性之后，再来校验对应的 raw data 数据块。</p>
+<p>有了以上背景，再回到刚刚这个“为何还需要在 Level 0 的基础上继续算hash组装下一个 Level 层级”的问题，按照上面的安全策略，如果 hash 信息只有 Level 0 一层的话，接下来对 raw data 数据块的校验将会是这样：每操作一个raw data数据块，都需要计算一次 Level 0 的 hash 值，跟 root hash 进行比较，验证合法之后再对 raw data 数据块进行校验。本文中举例是 1G 的镜像，Level 0用来保存 hash 信息的数据块已经达到 2048 块，如果对面对更大的镜像，Level 0 所占的数据块也会更大，如果是按照上面的计算方法，对 raw data 数据块的校验效率将会非常非常低。</p>
+<p>作为对比，哈希树机制是如何体现出效率呢，下面以具体某一块 raw data 数据块的读取过程来说明其设计原理：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogafbc138ead05da1b26f41abf1b5c35f9.png"></p>
+<p>1）假设目前正需要读取第 200000 块的数据块，通过前面哈希树的构造，可以比较快速的计算出在 Level 0 层，也就是直接对应这个数据块的hash值存储位置，通过对 128 相除以及求余的方式就可以分别计算出该 hash 值存储在具体某一块(块A)以及这一块上的偏移(偏移A)。</p>
+<p>2）确定了 Level 0 层的具体块A后，利用相同的方式可以得到 Level 0 块A在 Level 1 层存储其 hash 值的块B位置以及块B上的偏移(偏移B)</p>
+<p>3）同上述原理，可以最终定位到 Level 1 层块 B 在 Level 2 上的数据块(只有一块)上偏移(偏移C)</p>
+<p>4）在获取到该数据块对应hashtree关联的各个层级的块以及偏移后，接下来就是做一层一层的验证：</p>
+<p>步骤1. 优先验证的是Level 2 中的数据块(只有一个4k的数据块)， 计算这个数据块的hash，跟保存的 root hash进行比对，验证Level 2的数据块块是否正确。</p>
+<p>步骤2. 在Level 2中的数据块得到验证后，由上面计算到的Level 2中数据块上的偏移 C 去校验 Level 1 层的 B 块。</p>
+<p>步骤3. 在 Level 1 层的 B 数据块得到验证后，由上面计算到的 Level 1 中 B 数据块上的偏移B去验证 Level 0 层的 A块。</p>
+<p>步骤4. Level 0层中的 A 数据块得到验证后，最终会由 Level 0 层的偏移A来校验最终的 raw data数据块(第 200000 块).</p>
+<p>可以看到，在使用哈希树的设计之后，对数据块验证整个过程中，涉及到的数据块hash计算只有3块(有N层就计算N块)，相比于一层校验模式，效率要高很多。</p>
+<p><strong>三、应用层面</strong></p>
+<p>读者到目前为止应该大致了解到了移动终端在镜像完整性校验上相关的设计原理，接下来会从应用端层面来说明如何使用 dm-verity 底层提供的接口来初始化 dm 设备，并为后续实时校验做好准备，内核绝大多数功能模块存在的意义都要靠跟应用端的交互来体现，作为对内核某个模块的研究，初步从应用层出发不乏是一个好办法。</p>
+<p>应用层主要有以下3个步骤：</p>
+<p>步骤一. Create dm device</p>
+<p>创建 dm 设备主要有如下小步骤：</p>
+<ol>
+<li>open &#x2F;dev&#x2F;device-mapper 设备节点</li>
+<li>传入逻辑分区name、随机生成的uuid参数，调用 DM_DEV_CREATE ioctl 命令</li>
+</ol>
+<p>步骤二. Load verity table</p>
+<p>这里需要引入一个 verity table 的概念，先简单介绍以下 verity table 所包含的内容：</p>
+<p>1）Verity target version(verity target 版本号)</p>
+<p>2）Data block device(存储实际待校验数据的块设备)</p>
+<p>3）Hash block device(存储校验使用到hash的块设备，一般情况跟data block device是同一个)</p>
+<p>4）Data block size(数据块设备的每块存储size)</p>
+<p>5）Hash block size（hash块设备的每块存储size）</p>
+<p>6）Num data block(数据块设备占用的块数量)</p>
+<p>7）Hash start block(hash设备在存储设备的起始位置)</p>
+<p>8）Hash algo(hash算法)</p>
+<p>9）root digest(对应上面说的 root hash)</p>
+<p>10）Salt(用于计算hash的盐值)</p>
+<p>这些信息主要是跟最终数据块在校验计算过程中会被使用到的，比如说 hash 设备的起始位置、hash算法、root hash、salt，这些都在实际运行时校验数据块时会用到，这些信息是存储是镜像的固定位置上，这些信息在编译阶段构建镜像的时候就已经计算好的，并存储在镜像的固定位置。</p>
+<p>Verity table 初始化代码具体如下：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog2fe4aca179fac7a107e2e3d05b9a6732.png"></p>
+<p>上层通过从镜像固定位置获取到信息并初始化好 verity table， 通过调用DM_TABLE_LOAD</p>
+<p>Ioctl 命令将 verity table 传递至kernel。</p>
+<p>步骤三. Active dm device</p>
+<p>调用DM_DEV_SUSPEND ioctl 指令激活 dm device，对应底层，该 cmd 对应 suspend &amp; resume的实现，如果不设置 DM_SUSPEND_FLAG 标志位，默认走 resume 流程。</p>
+<p>应用端在实现上比较简单，主要通过 create -&gt; load verity table -&gt; active dm device 的流程完成了对dm设备的创建、verity table的读取以及传递以及dm设备的激活，为后续实时进行的数据块校验做好了初始化工作。</p>
+<p><strong>四、内核层面</strong></p>
+<p>有了以上应用层面的流程讲解，那对应内核，自然而然就是对每一步应用端的系统调用做对应的内核实现做讲解。</p>
+<p>相应的，内核层面也有以下3个步骤：</p>
+<p>步骤一. dev_create</p>
+<p>对应应用端的DM_DEV_CREATE ioctl cmd，kernel端的大致实现如下：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogccfa2ebd83ceb9f60a306d6bc6ce6b76.png"></p>
+<p>这部分比较简单：</p>
+<p>1). 检测传入参数的partition name是否合法</p>
+<p>2). 开始尝试分配内存初始化 mapped device 结构体以及分配设备minor号（最终用于 dm 设备的设备号，比如 dm-1），使用内核提供的blk_queue_make_request函数注册该mapped device对应的请求队列dm_make_request, 该请求队列最终会在IO重定向中被使用到。并将该mapped device作为磁盘块设备注册到内核中。</p>
+<p>3). 将创建好的mapped device插入到一个全局hash表中，该表中保存了内核中当前创建的所有mapped device。</p>
+<p>步骤二. dm_ctl_ioctl(DM_TABLE_LOAD_CMD(table_load))</p>
+<p>对应应用端的DM_TABLE_LOAD ioctl cmd，kernel端的大致实现可看下面的思维导图：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog4afc7c79fab30f870aed1bd266ea78e8.png"></p>
+<p>总的来说，这个步骤主要是根据入参初始化相应的dm_table、dm_target结构，并且根据参数所指定的target类型，调用相应的target类型的构建函数ctr在内存中构建target device， 在结构上形成 dm_table –&gt; dm_target –&gt; target type –&gt; target device 的链路结构。</p>
+<p>步骤三. dm_ctl_ioctl(DM_DEV_SUSPEND_CMD(dev_suspend))</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/bloge0642548438f6e608b96e333d12f12cd.png"></p>
+<p>很显然，这一个步骤主要是建立 mapped device 与 dm_table 的关联。</p>
+<p>通过以上几个步骤，在内核中就建立一个可以提供给用户使用的mapped device逻辑块设备</p>
+<p>综上涉及到了几个关键的数据结构： mapped device、dm_table、dm_target、target_type、target device(以dm-verity为例)</p>
+<p>其实这几个步骤主要是对上述数据结构进行初始化，并且更重要是互相建立了关联关系。他们之间的关联关系如下：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog08c1b4ed417142d1c73e3a90a6e99bb8.png"></p>
+<p>内核经过了这3个步骤，一方面是创建了一个可以提供给应用端使用的 mapped device 逻辑块设备，另一方面是内部建立了 mapped device - target device 的联系， 应用层可以通过对 mapped device 进行策略逻辑操作，最终会通过 mapped device - target device 的联系作用到 对应的target device 上。</p>
+<p><strong>五、核心数据流</strong></p>
+<p>在上面介绍了dm-verity的设计原理、应用层面以及内核层面的实现之后，读者可能比较关心整个链路的数据流，或者说镜像在校验链路具体流程是如何的，接下来以下主要是围绕着访问镜像文件时的IO流是如何的。</p>
+<p>上面说到，应用层在经过 create -&gt; load verity table -&gt; active dm device 的流程完成了dm块设备的初始化工作，之后应用层会对该逻辑块设备进行文件系统挂载，在挂载的过程中，需要访问到实际存储设备(读取文件系统的super block等)，这个过程中就需要透过这个逻辑块设备，最终操作到与其关联的target device。</p>
+<p>在这个过程中， 对块设备的IO请求会从逻辑设备mapped device转发相应的target device上，并且会根据对应target_type描述的IO处理规则对IO请求进行处理。以本文讨论的 dm-verity 类型的 target device 来说，对于 mapped device 转发过来的IO，会在 hashtree 里找到该 IO data 对应的 hash 数据，并进行比较，完成校验，返回此次的校验结果并结束本次IO请求。</p>
 
-<p>解法二：<br>解法一比较耗时，所以在解法一基础上进行优化，可以把中间的结果都保存到数组nums中，后续就不需要每次都遍历才拿到结果了。</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Solution</span> &#123;<br><span class="hljs-keyword">public</span>:<br>    <span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">numTrees</span><span class="hljs-params">(<span class="hljs-type">int</span> n)</span> </span>&#123;<br>        <span class="hljs-function">vector&lt;<span class="hljs-type">int</span>&gt; <span class="hljs-title">nums</span><span class="hljs-params">(<span class="hljs-number">20</span>, <span class="hljs-number">0</span>)</span></span>;<br>        nums[<span class="hljs-number">0</span>] = <span class="hljs-number">1</span>;<br>        <span class="hljs-built_in">traverse</span>(n, nums);<br>        <span class="hljs-keyword">return</span> nums[n];<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">traverse</span><span class="hljs-params">(<span class="hljs-type">int</span> n, vector&lt;<span class="hljs-type">int</span>&gt; &amp;nums)</span></span><br><span class="hljs-function">    </span>&#123;<br>        <span class="hljs-type">int</span> res = <span class="hljs-number">0</span>;<br>        <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">if</span> (nums[n] != <span class="hljs-number">0</span>) &#123;<br>            <span class="hljs-keyword">return</span> nums[n];<br>        &#125;<br><br>        <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; n; ++i) &#123;<br>            nums[n] += (<span class="hljs-built_in">traverse</span>(i, nums) * <span class="hljs-built_in">traverse</span>(n- <span class="hljs-number">1</span> - i, nums));<br>        &#125;<br>        <span class="hljs-keyword">return</span> nums[n];<br>    &#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
-
-<p>解法3：<br>动态规划，后续再写具体思路吧：</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Solution</span> &#123;<br><span class="hljs-keyword">public</span>:<br>    <span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">numTrees</span><span class="hljs-params">(<span class="hljs-type">int</span> n)</span> </span>&#123;<br>        <span class="hljs-comment">// 二叉搜索数的特征，左子树小于根，右子树大于根</span><br>        <span class="hljs-function">vector&lt;<span class="hljs-type">int</span>&gt; <span class="hljs-title">dp</span><span class="hljs-params">(n<span class="hljs-number">+1</span>, <span class="hljs-number">0</span>)</span></span>;<br>        dp[<span class="hljs-number">0</span>]=<span class="hljs-number">1</span>;  <span class="hljs-comment">// dp[0]初始化为1</span><br>        <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i=<span class="hljs-number">1</span>; i&lt;=n; i++)  <span class="hljs-comment">// 从1...n的二叉搜索数数目</span><br>            <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> j=<span class="hljs-number">1</span>; j&lt;=i; j++)  <span class="hljs-comment">// 逐步选用1...n作为根节点</span><br>                dp[i]+=dp[j<span class="hljs-number">-1</span>]*dp[i-j];  <span class="hljs-comment">// 左侧j-1个数，右侧i-j个数</span><br>        <span class="hljs-keyword">return</span> dp[n]; <br>    &#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
@@ -148,14 +230,14 @@
     </section>
     </div>
 </article>
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/posts/98%E3%80%81%E9%AA%8C%E8%AF%81%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91.html">98、验证二叉搜索树</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/posts/94%E3%80%81%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E4%B8%AD%E5%BA%8F%E9%81%8D%E5%8E%86.html">94、二叉树的中序遍历</a></div></section></div>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/posts/98%E3%80%81%E9%AA%8C%E8%AF%81%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91.html">98、验证二叉搜索树</a></div></section></div>
 
 <div class="related-wrap" id="related-posts">
     <section class='header'>
       <div class='title cap theme'>您可能感兴趣的文章</div>
     </section>
     <section class='body'>
-    <div class="related-posts"><a class="item" href="\posts\94、二叉树的中序遍历.html" title="94、二叉树的中序遍历"><span class="title">94、二叉树的中序遍历</span></a><a class="item" href="\posts\98、验证二叉搜索树.html" title="98、验证二叉搜索树"><span class="title">98、验证二叉搜索树</span></a><a class="item" href="\posts\二叉树算法核心纲领.html" title="二叉树算法核心纲领"><span class="title">二叉树算法核心纲领</span></a></div></section></div>
+    <div class="related-posts"><a class="item" href="\posts\94、二叉树的中序遍历.html" title="94、二叉树的中序遍历"><span class="title">94、二叉树的中序遍历</span></a></div></section></div>
 
 
 
@@ -188,9 +270,7 @@
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="true"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%A2%98%E7%9B%AE%E6%8F%8F%E8%BF%B0"><span class="toc-text">一、题目描述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81C-%E4%BB%A3%E7%A0%81"><span class="toc-text">二、C++代码</span></a></li></ol></div><div class="widget-footer">
 
-<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
 
 
   <widget class="widget-wrapper categories-widget">
