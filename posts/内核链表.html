@@ -1,0 +1,881 @@
+
+<!DOCTYPE html><html lang="zh-CN" data-theme="light">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>内核链表 - mengchao666</title>
+
+  
+    <meta name="description" content="在Linux内核中使用了大量的链表结构来组织数据，包括设备列表以及各种功能模块中的数据组织。这些链表大多采用在include&#x2F;linux&#x2F;list.h实现的一个相当精彩的链表数据结构。事实上，内核链表就是采用双循环链表机制。 内核链表有别于传统链表就在节点本身不包含数据域，只包含指针域。故而可以很灵活的拓展数据结构。 一、神奇的结构：list_head要了解内核链表，就不得不提">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内核链表">
+<meta property="og:url" content="http://example.com/posts/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8.html">
+<meta property="og:site_name" content="mengchao666">
+<meta property="og:description" content="在Linux内核中使用了大量的链表结构来组织数据，包括设备列表以及各种功能模块中的数据组织。这些链表大多采用在include&#x2F;linux&#x2F;list.h实现的一个相当精彩的链表数据结构。事实上，内核链表就是采用双循环链表机制。 内核链表有别于传统链表就在节点本身不包含数据域，只包含指针域。故而可以很灵活的拓展数据结构。 一、神奇的结构：list_head要了解内核链表，就不得不提">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog69ipvfwph3.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog5u9thd0jfz.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogdgyqru9zqw.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogzysoo1ylwe.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogamryt0epan.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog5u9thd0jfz.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogdgyqru9zqw.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogq3n8hhap8i.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog1srgg2q44x.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog7twpttdv04.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogsakrwx0yw5.png">
+<meta property="article:published_time" content="2024-11-25T14:54:19.000Z">
+<meta property="article:modified_time" content="2024-11-25T14:54:44.655Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="kernel">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blog69ipvfwph3.png">
+  
+  
+  
+  <meta name="keywords" content="kernel">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="mengchao666" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+
+  
+    
+<link rel="stylesheet" href="https://gcore.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+
+  
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="/css/code-block.css"><link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'">
+<!-- hexo injector head_end start -->
+    <style>
+      @font-face {
+        font-family: 'hytmr';
+        font-style: normal;
+        font-weight: normal;
+        font-display: swap;
+        src: url(https://cdn.coolchong.cn/%E5%AD%97%E4%BD%93%E6%A0%B7%E5%BC%8F/hytmr55.woff) format('woff');
+      }    
+    </style>
+  
+    <style>
+    .medium-zoom-overlay {
+      z-index: 20;
+    }
+    
+    .medium-zoom-image {
+      z-index: 21;
+    }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/style.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+  <!-- hexo injector head_end end --></head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="/assets/images/avatar.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">mengchao666</div><div class="sub cap">个人记录</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="首页" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Linux内核知识</span></div><div class="widget-body"><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E9%98%9F%E5%88%97.html"><span class="title">内核队列</span></a><a class="item active" href="/posts/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8.html"><span class="title">内核链表</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/posts/offset-of%E5%92%8Ccontainer-of%E5%AE%8F.html"><span class="title">offset_of和container_of宏</span></a></div></widget>
+
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span><a class="cap-action" id="rss" title="Subscribe" href="/atom.xml"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19q0-.825.588-1.412T5 17q.825 0 1.413.588T7 19q0 .825-.587 1.413T5 21m13.5 0q-.65 0-1.088-.475T16.9 19.4q-.275-2.425-1.312-4.537T12.9 11.1q-1.65-1.65-3.762-2.687T4.6 7.1q-.65-.075-1.125-.512T3 5.5q0-.65.45-1.062t1.075-.363q3.075.275 5.763 1.563t4.737 3.337q2.05 2.05 3.338 4.738t1.562 5.762q.05.625-.363 1.075T18.5 21m-6 0q-.625 0-1.075-.437T10.85 19.5q-.225-1.225-.787-2.262T8.65 15.35q-.85-.85-1.888-1.412T4.5 13.15q-.625-.125-1.062-.575T3 11.5q0-.65.45-1.075t1.075-.325q1.825.25 3.413 1.063t2.837 2.062q1.25 1.25 2.063 2.838t1.062 3.412q.1.625-.325 1.075T12.5 21"/></svg></a></div><div class="widget-body fs14"><a class="item title" href="/posts/%E7%BA%A2%E9%BB%91%E6%A0%91.html"><span class="title">红黑树</span></a><a class="item title" href="/posts/%E5%86%85%E6%A0%B8%E9%98%9F%E5%88%97.html"><span class="title">内核队列</span></a><a class="item title" href="/posts/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8.html"><span class="title">内核链表</span></a><a class="item title" href="/posts/offset-of%E5%92%8Ccontainer-of%E5%AE%8F.html"><span class="title">offset_of和container_of宏</span></a><a class="item title" href="/posts/mmap.html"><span class="title">mmap</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/mengchao666" target="_blank" rel="external nofollow noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="#000000" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></a><a class="social" href="/about/" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linejoin="round"><path stroke-linecap="round" stroke-width="1.5" d="M12 21a9 9 0 1 0-8-4.873L3 21l4.873-1c1.236.639 2.64 1 4.127 1"/><path stroke-width="2.25" d="M7.5 12h.01v.01H7.5zm4.5 0h.01v.01H12zm4.5 0h.01v.01h-.01z"/></g></svg></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></g></svg></a><a class="social" href="javaScript:switchTheme();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="#000000" d="M233.54 142.23a8 8 0 0 0-8-2a88.08 88.08 0 0 1-109.8-109.8a8 8 0 0 0-10-10a104.84 104.84 0 0 0-52.91 37A104 104 0 0 0 136 224a103.1 103.1 0 0 0 62.52-20.88a104.84 104.84 0 0 0 37-52.91a8 8 0 0 0-1.98-7.98m-44.64 48.11A88 88 0 0 1 65.66 67.11a89 89 0 0 1 31.4-26A106 106 0 0 0 96 56a104.11 104.11 0 0 0 104 104a106 106 0 0 0 14.92-1.06a89 89 0 0 1-26.02 31.4"/></svg></a><a class="social" href="javaScript:toggleSnow();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 14.25l-.831-.659c-.946-.75-1.419-1.125-1.419-1.591s.473-.841 1.419-1.591L21 9.75m-18 0l.831.659c.946.75 1.419 1.125 1.419 1.591s-.473.841-1.419 1.591L3 14.25M14.572 21l.156-1.059c.178-1.205.267-1.807.674-2.042c.407-.236.972-.011 2.104.437l.994.394M9.428 3l-.156 1.059c-.178 1.205-.267 1.807-.674 2.042c-.407.236-.972.011-2.104-.437L5.5 5.27M5 18.732l1.07-.395c1.218-.448 1.827-.672 2.265-.438s.533.838.724 2.042L9.227 21M19 5.268l-1.07.394c-1.218.45-1.828.673-2.265.439s-.533-.838-.724-2.042L14.773 3M19 12H5m10.5 6l-7-12m7 0l-7 12" color="#000000"/></svg></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/%E5%86%85%E6%A0%B8%E9%98%9F%E5%88%97.html">Linux内核知识</a></div><div id="tag"> <span>&nbsp标签：</span><a class="cap breadcrumb-link" href="/tags/kernel/">kernel</a>&nbsp</div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-25T14:54:19.000Z">2024-11-25</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-25T14:54:44.655Z">2024-11-25</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>内核链表</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>在Linux内核中使用了大量的链表结构来组织数据，包括设备列表以及各种功能模块中的数据组织。这些链表大多采用在include&#x2F;linux&#x2F;list.h实现的一个相当精彩的链表数据结构。事实上，内核链表就是采用双循环链表机制。</p>
+<p>内核链表有别于传统链表就在节点本身不包含数据域，只包含指针域。故而可以很灵活的拓展数据结构。</p>
+<h3 id="一、神奇的结构：list-head"><a href="#一、神奇的结构：list-head" class="headerlink" title="一、神奇的结构：list_head"></a>一、神奇的结构：list_head</h3><p>要了解内核链表，就不得不提 list_head。这个结构很有意思，整个结构没有数据域，只有两个指针域。<br>这个结构本身意义不大，不过在内核链表中，起着整个衔接作用，可以说是内核链表的核心不为过。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs javascript">struct list_head &#123;<br>   struct list_head *next, *prev;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h3 id="二、链表初始化"><a href="#二、链表初始化" class="headerlink" title="二、链表初始化"></a>二、链表初始化</h3><p>内核提供多种方式来初始化链表：宏初始化和接口初始化。</p>
+<h4 id="1-宏初始化"><a href="#1-宏初始化" class="headerlink" title="(1)宏初始化"></a>(1)宏初始化</h4><p>LIST_HEAD_HEAD_INIT宏设计的很精妙。这个宏本身不包含任何数据类型，也就是说没有限定唯一的数据类型，这就使得整个链表足够灵活。是不是有点C++模板的意思？</p>
+<p>对于任意给定的结构指针，将【前驱】和【后继】指针都指向自己，作为链表头指针。</p>
+<p>LIST_HEAD 宏 本质就是赋予了 name 于 【struct list_head】 属性，由于 list_head 本身不包含数据域，所以搭配 LIST_HEAD_HEAD_INIT 宏，就使得整个链表上的数据更加灵活。具备通用性。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs javascript">#define <span class="hljs-title function_">LIST_HEAD_INIT</span>(<span class="hljs-params">name</span>) &#123; &amp;(name), &amp;(name) &#125;<br>#define <span class="hljs-title function_">LIST_HEAD</span>(name) \<br>   struct list_head name = <span class="hljs-title function_">LIST_HEAD_INIT</span>(name)<br></code></pre></td></tr></table></figure>
+
+<h4 id="2-接口初始化"><a href="#2-接口初始化" class="headerlink" title="(2)接口初始化"></a>(2)接口初始化</h4><p>接口操作就比较直接明了，基本上和宏实现的意图一样。直接将链表头指针的前驱和后继都指向自己</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">INIT_LIST_HEAD</span>(<span class="hljs-params">struct list_head *list</span>)<br>&#123;<br>   list-&gt;next = list;<br>   list-&gt;prev = list;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>我们以示例来补充说明，这样有助于大家辅助理解：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">// 1. 链表节点初始化，前驱和后继都指向自己（初始化）</span><br>struct list = <span class="hljs-title function_">LIST_HEAD</span>(list);<br></code></pre></td></tr></table></figure>
+
+<p>前面说了 list_head 只有指针域，没有数据域，如果只是这样就没有什么意义了。所以我们需要创建一个宿主结构，然后再再此结构包含 list 字段，宿主结构，也有其他字段（进程描述符，页面管理结构等都是采用这种方法创建链表的）。假设定义如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs javascript">struct my_data_list &#123;<br>    int data ;<br>    struct list_head list; <span class="hljs-comment">/* list head , 这个至关重要，后期遍历通过container_of 解析my_data_list 地址 */</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>创建一个节点：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs javascript">struct my_data_list first_data =<br>&#123; <br>    .<span class="hljs-property">val</span> = <span class="hljs-number">1</span>,<br>    <span class="hljs-comment">/* 这里有点绕，事实上就是将first_data.list , 前驱和后继都指向自己进行初始化 */</span><br>    .<span class="hljs-property">list</span> = <span class="hljs-title function_">LIST_HEAD_INIT</span>(first_data.<span class="hljs-property">list</span>),<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog69ipvfwph3.png"></p>
+<p>这里 list 的 prev 和 next 都指向list 自己了，并且list 属于 my_data_list 的成员。只需要遍历到lst 节点就能根据 前面讲的 container_of 推导得到其宿主结构的地址，从而访问val值，如果有其他方法，也可访问。</p>
+<p>分析到这里，应该逐渐明晰，为何list_head 设计很有意思？为什么链表本身不包含数据域，却能衍生出无数数据类型，不受特定的数据类型限制。</p>
+<h3 id="三、添加节点"><a href="#三、添加节点" class="headerlink" title="三、添加节点"></a>三、添加节点</h3><p>内核相应的提供了添加节点的接口：</p>
+<h4 id="1-list-add"><a href="#1-list-add" class="headerlink" title="(1)list_add"></a>(1)list_add</h4><p>list_add 如下，最终调用的是__list_add 函数，根据注释可知，list_add 是头部插入，总是在链表的头部插入一个新的节点。</p>
+<p>list_add</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_add - add a new entry</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@new</span>: new entry to be added</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@head</span>: list head to add it after</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * Insert a new entry after the specified head.</span><br><span class="hljs-comment"> * This is good for implementing stacks.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_add</span>(<span class="hljs-params">struct list_head *<span class="hljs-keyword">new</span>, struct list_head *head</span>)<br>&#123;<br>   <span class="hljs-title function_">__list_add</span>(<span class="hljs-keyword">new</span>, head, head-&gt;next);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>__list_add</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * Insert a new entry between two known consecutive entries.</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * This is only for internal list manipulation where we know</span><br><span class="hljs-comment"> * the prev/next entries already!</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">__list_add</span>(<span class="hljs-params">struct list_head *<span class="hljs-keyword">new</span>,</span><br><span class="hljs-params">         struct list_head *prev,</span><br><span class="hljs-params">         struct list_head *next</span>)<br>&#123;<br>   next-&gt;prev = <span class="hljs-keyword">new</span>;<br>   <span class="hljs-keyword">new</span>-&gt;next = next;<br>   <span class="hljs-keyword">new</span>-&gt;prev = prev;<br>   prev-&gt;next = <span class="hljs-keyword">new</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>我们再以示例补充说明：</p>
+<ul>
+<li>首先创建一个链表头：listHead</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-title function_">LIST_HEAD</span>(listHead);<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog5u9thd0jfz.png"></p>
+<ul>
+<li>然后再创建第一个链表节点：</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs javascript">struct my_data_list first_data =<br>&#123; <br>    .<span class="hljs-property">val</span> = <span class="hljs-number">1</span>,<br>    .<span class="hljs-property">list</span> = <span class="hljs-title function_">LIST_HEAD_INIT</span>(first_data.<span class="hljs-property">list</span>),<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogdgyqru9zqw.png"></p>
+<ul>
+<li>接着 把这个节点插入到 listHead 后</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-title function_">list_add</span>(&amp;frist_data.<span class="hljs-property">list</span>, &amp;listHead);<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogzysoo1ylwe.png"></p>
+<ul>
+<li>紧接着我们再创建第二个节点：</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs javascript">struct my_data_list second_data =<br>&#123; <br>    .<span class="hljs-property">val</span> = <span class="hljs-number">2</span>,<br>    <span class="hljs-comment">/* 也可以调用接口 初始化*/</span><br>    .<span class="hljs-property">list</span> = <span class="hljs-title function_">LIST_HEAD_INIT</span>(second_data.<span class="hljs-property">list</span>),<br>&#125;;<br><br><span class="hljs-title function_">list_add</span>(&amp;second_data.<span class="hljs-property">list</span>, &amp;listHead);<br></code></pre></td></tr></table></figure>
+
+<p>示意图如下：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogamryt0epan.png"></p>
+<p>以此类推，每次插入一个新节点，都是紧靠着header节点，而之前插入的节点依次排序靠后，那最后一个节点则是第一次插入header后的那个节点。</p>
+<p>可以看出：先来的节点靠后，而后来的节点靠前，符合“先进后出，后进先出”。所以此种结构类似于 <strong>stack“栈”</strong> ， 类似于内核stack中的栈顶指针esp， 它都是紧靠着最后push到栈的元素。</p>
+<h4 id="2-list-add-tail"><a href="#2-list-add-tail" class="headerlink" title="(2)list_add_tail"></a>(2)list_add_tail</h4><p>再看内核另外一种插入方式，本质都是调用__lis_add。不同的是，一个是头部插入，一个是尾部插入。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_add_tail - add a new entry</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@new</span>: new entry to be added</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@head</span>: list head to add it before</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * Insert a new entry before the specified head.</span><br><span class="hljs-comment"> * This is useful for implementing queues.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_add_tail</span>(<span class="hljs-params">struct list_head *<span class="hljs-keyword">new</span>, struct list_head *head</span>)<br>&#123;<br>   <span class="hljs-title function_">__list_add</span>(<span class="hljs-keyword">new</span>, head-&gt;prev, head);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>我们还是以示例辅助说明：</p>
+<ul>
+<li>首先创建一个链表头：</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-title function_">LIST_HEAD</span>(listHead);<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog5u9thd0jfz.png"></p>
+<ul>
+<li>然后创建第一个节点</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs javascript">struct my_data_list first_data =<br>&#123; <br>    .<span class="hljs-property">val</span> = <span class="hljs-number">1</span>,<br>    .<span class="hljs-property">list</span> = <span class="hljs-title function_">LIST_HEAD_INIT</span>(first_data.<span class="hljs-property">list</span>),<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogdgyqru9zqw.png"></p>
+<ul>
+<li>插入第一个节点：</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-title function_">list_add_tail</span>(&amp;first_data.<span class="hljs-property">list</span>, listHead);<br></code></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogq3n8hhap8i.png"></p>
+<ul>
+<li>紧接着插入第二个节点：</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs javascript">struct my_data_list second_data =<br>&#123; <br>    .<span class="hljs-property">val</span> = <span class="hljs-number">2</span>,<br>    <span class="hljs-comment">/* 也可以调用接口 初始化*/</span><br>    .<span class="hljs-property">list</span> = <span class="hljs-title function_">LIST_HEAD_INIT</span>(second_data.<span class="hljs-property">list</span>),<br>&#125;;<br><br><span class="hljs-title function_">list_add_tail</span>(&amp;second_data.<span class="hljs-property">list</span>, &amp;listHead);<br></code></pre></td></tr></table></figure>
+
+<p>示意图如下：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog1srgg2q44x.png"></p>
+<p>每次插入的新节点都是紧挨着 header 表尾，而插入的第一个节点排在了第一位，第二个排在了第二位。</p>
+<p>先插入的节点排在前面，后插入的节点排在后面，“先进先出，后进后出”（First in First out,<strong>FIFO</strong>）！这不就是队列吗？</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h4><p>由于是双循环链表，看起来尾部插入和头部插入是一样的，其实不然。</p>
+<p>我们再来对比尾部和头部插入的区别：</p>
+<ul>
+<li>头部插入，结构是逆序，属于先进后出，最主要的区别就是头节点的prev指针指向第一个节点。</li>
+<li>尾部插入，结构是顺序，属于FIFO结构，最主要的区别就是头节点的next指针指向第一个节点。</li>
+<li>list_add：头部插入一个节点</li>
+<li>list_add_tail：尾部插入一个节点</li>
+</ul>
+<h3 id="四、删除节点"><a href="#四、删除节点" class="headerlink" title="四、删除节点"></a>四、删除节点</h3><p>内核同样定义了删除节点的接口 list_del</p>
+<p>list_del：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_del</span>(<span class="hljs-params">struct list_head *entry</span>)<br>&#123;<br>    <span class="hljs-comment">/* __list_del_entry(entry) 也行*/</span><br>   <span class="hljs-title function_">__list_del</span>(entry-&gt;prev, entry-&gt;next);<br>  <br>    <span class="hljs-comment">/* 指向特定的位置，反初始化 */</span><br>   entry-&gt;next = <span class="hljs-variable constant_">LIST_POISON1</span>;<br>   entry-&gt;prev = <span class="hljs-variable constant_">LIST_POISON2</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>__list_del：这个接口，根据prev&#x2F;next 删除其节点，删除的节点必须是已知的并且 prev 和 next 不为空</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * Delete a list entry by making the prev/next entries</span><br><span class="hljs-comment"> * point to each other.</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * This is only for internal list manipulation where we know</span><br><span class="hljs-comment"> * the prev/next entries already!</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">__list_del</span>(<span class="hljs-params">struct list_head * prev, struct list_head * next</span>)<br>&#123;<br> next-&gt;prev = prev;<br> prev-&gt;next = next;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>__list_del_entry：删除一个节点。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_del - deletes entry from list.</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@entry</span>: the element to delete from the list.</span><br><span class="hljs-comment"> * Note: list_empty() on entry does not return true after this, the entry is</span><br><span class="hljs-comment"> * in an undefined state.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">__list_del_entry</span>(<span class="hljs-params">struct list_head *entry</span>)<br>&#123;<br>   <span class="hljs-title function_">__list_del</span>(entry-&gt;prev, entry-&gt;next);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_del_init - deletes entry from list and reinitialize it.</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@entry</span>: the element to delete from the list.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_del_init</span>(<span class="hljs-params">struct list_head *entry</span>)<br>&#123;<br> <span class="hljs-title function_">__list_del_entry</span>(entry);<br> <span class="hljs-title function_">INIT_LIST_HEAD</span>(entry);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>利用list_del(struct list_head *entry) 接口就可以删除链表中的任意节点了，需注意，前提条件是这个节点是已知的，既在链表中真实存在，切prev，next指针都不为NULL。</li>
+<li>被剔除下来的 my_data_list.list，prev、next 指针分别被设为 LIST_POSITION2和LIST_POSITION1两个特殊值，这样设置是为了保证不在链表中的节点项不可访问–对LIST_POSITION1和LIST_POSITION2的访问都将引起页故障。</li>
+<li>与之相对应，list_del_init()函数将节点从链表中解下来之后，调用LIST_INIT_HEAD()将节点置为空链状态。</li>
+</ul>
+<blockquote>
+<p>list_del() 和 list_del_init 是外部接口。__list_del() 和 __list_entry() 是内核内部节点。 list_del() 作用是删除双链表中的一个节点。并将节点的prev和next都指向特定位置，LIST_POSITION1和LIST_POSITION2。 list_del_init() 作用是删除双链表中的一个节点，并将节点的prev和next都指向自己，回到最开始创建节点前的状态。</p>
+</blockquote>
+<h3 id="五、搬移"><a href="#五、搬移" class="headerlink" title="五、搬移"></a>五、搬移</h3><p>内核提供了将原本属于一个链表的节点移动到另一个链表的操作，并根据插入到新链表的位置分为两类：头部搬移和尾部搬移。搬移的本质就是删除加插入。</p>
+<h4 id="头部搬移"><a href="#头部搬移" class="headerlink" title="头部搬移"></a><strong>头部搬移</strong></h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_move - delete from one list and add as another&#x27;s head</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@list</span>: the entry to move</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@head</span>: the head that will precede our entry</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_move</span>(<span class="hljs-params">struct list_head *list, struct list_head *head</span>)<br>&#123;<br>   <span class="hljs-title function_">__list_del_entry</span>(list);<br>   <span class="hljs-title function_">list_add</span>(list, head);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="尾部搬移"><a href="#尾部搬移" class="headerlink" title="尾部搬移"></a><strong>尾部搬移</strong></h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_move_tail - delete from one list and add as another&#x27;s tail</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@list</span>: the entry to move</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@head</span>: the head that will follow our entry</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_move_tail</span>(<span class="hljs-params">struct list_head *list,</span><br><span class="hljs-params">      struct list_head *head</span>)<br>&#123;<br>   <span class="hljs-title function_">__list_del_entry</span>(list);<br>   <span class="hljs-title function_">list_add_tail</span>(list, head);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="六、合并"><a href="#六、合并" class="headerlink" title="六、合并"></a>六、合并</h3><p>内核还提供两组合并操作，将两条链表合并在一起。</p>
+<p>当 list1 被挂接到 list2 之后，作为原表头指针的 list1 的next、prev仍然指向原来的节点，为了避免引起混乱，Linux提供了一个list_splice_init()函数.该函数在将list合并到head链表的基础上，调用INIT_LIST_HEAD(list)将list设置为空链。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_splice</span>(<span class="hljs-keyword">const</span> struct list_head *list, struct list_head *head);<br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_splice_init</span>(struct list_head *list, struct list_head *head);<br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_splice_tail</span>(<span class="hljs-keyword">const</span> struct list_head *list, struct list_head *head);<br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_splice_tail_init</span>(struct list_head *list, struct list_head *head);<br></code></pre></td></tr></table></figure>
+
+<p>示意图如下：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blog7twpttdv04.png"></p>
+<p>另外一种方式类似，只不过合并时断开的位置有所不同</p>
+<h3 id="七、替换"><a href="#七、替换" class="headerlink" title="七、替换"></a>七、替换</h3><p>内核还提供一组替换链表节点的操作。list_replace：将新的节点替换到旧的节点上。list_replace_init：将新的节点替换到旧的节点上。同时将旧的节点的prev和next指向自己，反初始化</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_replace</span>(struct list_head *old, struct list_head *<span class="hljs-keyword">new</span>);<br><span class="hljs-keyword">static</span> inline <span class="hljs-keyword">void</span> <span class="hljs-title function_">list_replace_init</span>(struct list_head *old, struct list_head *<span class="hljs-keyword">new</span>);<br></code></pre></td></tr></table></figure>
+
+<h3 id="八、遍历操作"><a href="#八、遍历操作" class="headerlink" title="八、遍历操作"></a>八、遍历操作</h3><p>内核提供了一组宏进行遍历操作。经过一系列的增删减改操作，我们终于到了遍历的时候。</p>
+<h4 id="list-entry-宏"><a href="#list-entry-宏" class="headerlink" title="list_entry 宏"></a><strong>list_entry 宏</strong></h4><p>重头戏来了，遍历的关键就是这个list_entry宏。本质就是container_of宏。</p>
+<p>具体分析见上一篇文章。这个宏的主要作用就是获取宿主结构的指针地址。</p>
+<p>前文提到，我们是以list 指针为节点组成的一条双链表，遍历的过程中只能得到list的地址，那么对于其所有者地址就是通过这个宏获取的。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment">* list_entry - get the struct for this entry</span><br><span class="hljs-comment">* <span class="hljs-doctag">@ptr</span>: the &amp;struct list_head pointer.</span><br><span class="hljs-comment">* <span class="hljs-doctag">@type</span>: the type of the struct this is embedded in.</span><br><span class="hljs-comment">* <span class="hljs-doctag">@member</span>: the name of the list_struct within the struct.</span><br><span class="hljs-comment">*/</span><br>#define <span class="hljs-title function_">list_entry</span>(ptr, type, member) \<br>   <span class="hljs-title function_">container_of</span>(ptr, type, member)<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/* 根据list 倒推 my_list_data*/</span><br><span class="hljs-title function_">list_entry</span>(&amp;my_list_data.<span class="hljs-property">list</span>, <span class="hljs-title function_">typeof</span>(&amp;my_list_data), list)<br></code></pre></td></tr></table></figure>
+
+<h4 id="list-for-each"><a href="#list-for-each" class="headerlink" title="list_for_each"></a><strong>list_for_each</strong></h4><p>list_for_each 它实际上是一个for循环，利用传入的pos作为循环变量，从表头head开始，逐项向后（next方向）移动pos，直至又回到head</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_for_each - iterate over a list</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@pos</span>: the &amp;struct list_head to use as a loop cursor.</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@head</span>: the head for your list.</span><br><span class="hljs-comment"> */</span><br>#define <span class="hljs-title function_">list_for_each</span>(pos, head) \<br> <span class="hljs-keyword">for</span> (pos = (head)-&gt;next; pos != (head); pos = pos-&gt;next)<br></code></pre></td></tr></table></figure>
+
+<h4 id="list-for-each-entry"><a href="#list-for-each-entry" class="headerlink" title="list_for_each_entry"></a><strong>list_for_each_entry</strong></h4><p>遍历每一个list,然后获取其宿主结构地址。<br>&#x3D;&#x3D;pos一般是新建一个链表，传入，用于for循环遍历，head一般是待遍历的链表，member是传入的pos中的list_head对应的成员&#x3D;&#x3D;</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_for_each_entry - iterate over list of given type</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@pos</span>: the type * to use as a loop cursor.</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@head</span>: the head for your list.</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@member</span>: the name of the list_struct within the struct.</span><br><span class="hljs-comment"> */</span><br>#define <span class="hljs-title function_">list_for_each_entry</span>(pos, head, member)    \<br> <span class="hljs-keyword">for</span> (pos = <span class="hljs-title function_">list_entry</span>((head)-&gt;next, <span class="hljs-title function_">typeof</span>(*pos), member); \<br>      &amp;pos-&gt;member != (head);  \<br>      pos = <span class="hljs-title function_">list_entry</span>(pos-&gt;member.<span class="hljs-property">next</span>, <span class="hljs-title function_">typeof</span>(*pos), member))<br></code></pre></td></tr></table></figure>
+
+<h4 id="list-for-each-prev"><a href="#list-for-each-prev" class="headerlink" title="list_for_each_prev"></a><strong>list_for_each_prev</strong></h4><p>反向遍历得到list.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * list_for_each_prev - iterate over a list backwards</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@pos</span>: the &amp;struct list_head to use as a loop cursor.</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@head</span>: the head for your list.</span><br><span class="hljs-comment"> */</span><br>#define <span class="hljs-title function_">list_for_each_prev</span>(pos, head) \<br> <span class="hljs-keyword">for</span> (pos = (head)-&gt;prev; pos != (head); pos = pos-&gt;prev)<br></code></pre></td></tr></table></figure>
+
+<h4 id="list-for-each-entry-reverse"><a href="#list-for-each-entry-reverse" class="headerlink" title="list_for_each_entry_reverse"></a><strong>list_for_each_entry_reverse</strong></h4><p>反向遍历得到list,然后获取其宿主结构地址。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-comment">/**</span><br><span class="hljs-comment">* list_for_each_entry_reverse - iterate backwards over list of given type.</span><br><span class="hljs-comment">* <span class="hljs-doctag">@pos</span>: the type * to use as a loop cursor.</span><br><span class="hljs-comment">* <span class="hljs-doctag">@head</span>: the head for your list.</span><br><span class="hljs-comment">* <span class="hljs-doctag">@member</span>: the name of the list_struct within the struct.</span><br><span class="hljs-comment">*/</span><br>#define <span class="hljs-title function_">list_for_each_entry_reverse</span>(pos, head, member)   \<br>   <span class="hljs-keyword">for</span> (pos = <span class="hljs-title function_">list_entry</span>((head)-&gt;prev, <span class="hljs-title function_">typeof</span>(*pos), member); \<br>        &amp;pos-&gt;member != (head);  \<br>        pos = <span class="hljs-title function_">list_entry</span>(pos-&gt;member.<span class="hljs-property">prev</span>, <span class="hljs-title function_">typeof</span>(*pos), member))<br></code></pre></td></tr></table></figure>
+
+<h3 id="九、总结"><a href="#九、总结" class="headerlink" title="九、总结"></a>九、总结</h3><p>本文详细分析了 linux 内核 中的双链表结构，以图文的方式旨在帮助大家理解。</p>
+<p>当然还有很多接口限于篇幅没有介绍，本文只列出了常用了接口，相信只要理解了前面双链表的组成和插入过程，后面的删除和遍历就自然而然通了。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogsakrwx0yw5.png"></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/posts/%E5%86%85%E6%A0%B8%E9%98%9F%E5%88%97.html">内核队列</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/posts/offset-of%E5%92%8Ccontainer-of%E5%AE%8F.html">offset_of和container_of宏</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\posts\offset-of和container-of宏.html" title="offset_of和container_of宏"><span class="title">offset_of和container_of宏</span></a><a class="item" href="\posts\内核队列.html" title="内核队列"><span class="title">内核队列</span></a><a class="item" href="\posts\红黑树.html" title="红黑树"><span class="title">红黑树</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/topic/">专栏</a><a href="/archives/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/mengchao666/Linux-0.11code">Linux 0.11</a></div><div class="sitemap-group"><span class="fs15">探索</span><a href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html">站点</a><a href="/explore/notes/%E6%8E%A2%E7%B4%A2%E8%80%85%E7%AC%94%E8%AE%B0.html">笔记</a></div><div class="sitemap-group"><span class="fs15">友链</span><a href="/about/">朋友圈</a></div></div><div class="text"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/assets/images/keyboard.jpg" alt="描述文字" style="float: right; width: 60px; margin-left: 20px;">
+<center>
+  <div>
+    <div>
+      © 2024
+      <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com">mengchao666</a>
+      开心地使用 <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/xaoxuu/hexo-theme-stellar">Stellar</a>
+      主题，星际地球第<span id="runtime_span"></span>
+    </div>
+    <script type="text/javascript">
+      function show_runtime() {
+          window.setTimeout("show_runtime()", 1000);
+          X = new Date("08/18/2024 00:00:00");
+          Y = new Date();
+          T = (Y.getTime() - X.getTime());
+          M = 24 * 60 * 60 * 1000;
+          a = T / M;
+          A = Math.floor(a);
+          runtime_span.innerHTML = A + "天"
+      }
+      show_runtime();
+    </script>
+  </div>
+</center>
+<div class="totalcount" style="text-align:center">收集了 41 颗星星 ✧ </span><span class="post-count">共 62.5k 粒星尘，好像写完一本 鲁迅 的《呐喊》了啊</div></div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="true"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%A5%9E%E5%A5%87%E7%9A%84%E7%BB%93%E6%9E%84%EF%BC%9Alist-head"><span class="toc-text">一、神奇的结构：list_head</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%93%BE%E8%A1%A8%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">二、链表初始化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%AE%8F%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">(1)宏初始化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E6%8E%A5%E5%8F%A3%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">(2)接口初始化</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%B7%BB%E5%8A%A0%E8%8A%82%E7%82%B9"><span class="toc-text">三、添加节点</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-list-add"><span class="toc-text">(1)list_add</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-list-add-tail"><span class="toc-text">(2)list_add_tail</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%88%A0%E9%99%A4%E8%8A%82%E7%82%B9"><span class="toc-text">四、删除节点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%90%AC%E7%A7%BB"><span class="toc-text">五、搬移</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%B4%E9%83%A8%E6%90%AC%E7%A7%BB"><span class="toc-text">头部搬移</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B0%BE%E9%83%A8%E6%90%AC%E7%A7%BB"><span class="toc-text">尾部搬移</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%90%88%E5%B9%B6"><span class="toc-text">六、合并</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%9B%BF%E6%8D%A2"><span class="toc-text">七、替换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%81%8D%E5%8E%86%E6%93%8D%E4%BD%9C"><span class="toc-text">八、遍历操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#list-entry-%E5%AE%8F"><span class="toc-text">list_entry 宏</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#list-for-each"><span class="toc-text">list_for_each</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#list-for-each-entry"><span class="toc-text">list_for_each_entry</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#list-for-each-prev"><span class="toc-text">list_for_each_prev</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#list-for-each-entry-reverse"><span class="toc-text">list_for_each_entry_reverse</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">九、总结</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+  <widget class="widget-wrapper categories-widget">
+    <div class="widget-header categories-header dis-select">
+      <span class="name">分类索引</span>
+    </div>
+    <div class='post-list'>
+      <article class='' id='cats'>
+        
+          <div>
+            <a class="cat" href="/categories/C%E8%AF%AD%E8%A8%80/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>C语言</span>
+              <span class='badge'>(11)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux</span>
+              <span class='badge'>(3)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux%E5%B7%A5%E5%85%B7/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux工具</span>
+              <span class='badge'>(15)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Makefile/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Makefile</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/dm-verity/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>dm-verity</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/git/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>git</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/kernel/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>kernel</span>
+              <span class='badge'>(4)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E4%BA%8C%E5%8F%89%E6%A0%91/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>二叉树</span>
+              <span class='badge'>(4)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E7%BD%91%E7%AB%99/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>网站</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+      </article>
+    </div>
+  </widget>
+
+
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"codeblock":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'light'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"twikoo":{"js":"/js/services/twikoo_new.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+
+
+
+<!-- inject -->
+<script src="/js/custom.js"></script><script src="/js/code-block.js"></script><script src="https://cdn.jsdelivr.net/gh/huangwb8/bloghelper@latest/js/input-with-fire.js"></script><script src="https://cdn.staticfile.org/jquery/3.6.3/jquery.min.js"></script><script src="/static/js/snow.js"></script>
+</div><!-- hexo injector body_end start -->
+  <script>
+    mediumZoom(".l_body .content p img", { background: "var(--site-bg)" })
+  </script>
+  <!-- hexo injector body_end end --></body></html>
+<script>var posts=["posts/Makefile基础语法.html","posts/addr2line.html","posts/96、不同的二叉搜索树.html","posts/dd命令.html","posts/OOM.html","posts/find.html","posts/98、验证二叉搜索树.html","posts/grep.html","posts/ftpget.html","posts/mmap.html","posts/gtest.html","posts/nm.html","posts/dm-verity.html","/posts/1.html","posts/poll、epoll.html","posts/objdump.html","posts/94、二叉树的中序遍历.html","posts/offset-of和container-of宏.html","posts/readelf.html","posts/objcopy.html","posts/sed.html","posts/proc目录下pid各文件目录含义.html","posts/tar.html","posts/tcpdump.html","posts/scp.html","posts/内存申请函数.html","posts/top.html","posts/内核队列.html","posts/内核链表.html","posts/字符串函数.html","posts/二叉树算法核心纲领.html","posts/指针.html","posts/红黑树.html","posts/内存检测工具.html","posts/线程.html","posts/进程间通信.html","posts/锁、信号量.html","posts/动态链接库、静态链接库.html","posts/网站部署-写作.html","posts/预处理、编译、汇编、链接.html","posts/查找内核符号.html"];function toRandomPost(){ window.location.href = window.location.origin + posts[Math.floor(Math.random()*posts.length)]; };</script>
