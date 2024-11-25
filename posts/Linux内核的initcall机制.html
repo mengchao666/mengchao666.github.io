@@ -1,0 +1,799 @@
+
+<!DOCTYPE html><html lang="zh-CN" data-theme="light">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>Linux内核的initcall机制 - mengchao666</title>
+
+  
+    <meta name="description" content="从根文件系统的挂载说起吧，使能了initd小文件系统的OS，最终会调用到populate_rootfs执行解压挂载的操作，搜索populate最终看到是rootfs_initcall被执行到的，那就从此处开始说起吧，看看内核是如何执行到这个函数的 一、initcall函数调用流程调用链如下： 12345678910init&#x2F;main.c调用链如下： start_kernel()    ----&amp;g">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核的initcall机制">
+<meta property="og:url" content="http://example.com/posts/Linux%E5%86%85%E6%A0%B8%E7%9A%84initcall%E6%9C%BA%E5%88%B6.html">
+<meta property="og:site_name" content="mengchao666">
+<meta property="og:description" content="从根文件系统的挂载说起吧，使能了initd小文件系统的OS，最终会调用到populate_rootfs执行解压挂载的操作，搜索populate最终看到是rootfs_initcall被执行到的，那就从此处开始说起吧，看看内核是如何执行到这个函数的 一、initcall函数调用流程调用链如下： 12345678910init&#x2F;main.c调用链如下： start_kernel()    ----&amp;g">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-11-25T15:17:08.000Z">
+<meta property="article:modified_time" content="2024-11-25T15:17:37.868Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="kernel">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  <meta name="keywords" content="kernel">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="mengchao666" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+
+  
+    
+<link rel="stylesheet" href="https://gcore.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+
+  
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="/css/code-block.css"><link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'">
+<!-- hexo injector head_end start -->
+    <style>
+      @font-face {
+        font-family: 'hytmr';
+        font-style: normal;
+        font-weight: normal;
+        font-display: swap;
+        src: url(https://cdn.coolchong.cn/%E5%AD%97%E4%BD%93%E6%A0%B7%E5%BC%8F/hytmr55.woff) format('woff');
+      }    
+    </style>
+  
+    <style>
+    .medium-zoom-overlay {
+      z-index: 20;
+    }
+    
+    .medium-zoom-image {
+      z-index: 21;
+    }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/style.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+  <!-- hexo injector head_end end --></head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="/assets/images/avatar.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">mengchao666</div><div class="sub cap">个人记录</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="首页" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Linux内核知识</span></div><div class="widget-body"><a class="item" href="/posts/%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97.html"><span class="title">等待队列</span></a><a class="item" href="/posts/module-init%E5%AE%8F%E8%AF%A6%E8%A7%A3-insmod%E6%B5%81%E7%A8%8B-THIS-MODULE.html"><span class="title">module_init宏详解&insmod流程&THIS_MODULE</span></a><a class="item active" href="/posts/Linux%E5%86%85%E6%A0%B8%E7%9A%84initcall%E6%9C%BA%E5%88%B6.html"><span class="title">Linux内核的initcall机制</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95.html"><span class="title">内核调试</span></a><a class="item" href="/posts/%E4%BD%BF%E7%94%A8proc%E5%92%8Csysfs%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F.html"><span class="title">使用proc和sysfs文件系统</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-hrtime%E9%AB%98%E7%B2%BE%E5%BA%A6%E5%AE%9A%E6%97%B6%E5%99%A8.html"><span class="title">内核定时器&hrtime高精度定时器</span></a><a class="item" href="/posts/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B.html"><span class="title">系统调用流程</span></a><a class="item" href="/posts/%E4%BA%92%E6%96%A5%E9%94%81%E3%80%81%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C%E3%80%81%E8%87%AA%E6%97%8B%E9%94%81.html"><span class="title">互斥锁、信号量、原子操作、自旋锁</span></a><a class="item" href="/posts/DTS%E8%AE%BE%E5%A4%87%E6%A0%91.html"><span class="title">DTS设备树</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E7%BA%BF%E7%A8%8B.html"><span class="title">内核线程</span></a><a class="item" href="/posts/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8-workqueue.html"><span class="title">中断下半部-workqueue</span></a><a class="item" href="/posts/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8-tasklet.html"><span class="title">中断下半部-tasklet</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7%E5%87%BD%E6%95%B0.html"><span class="title">内核内存申请函数</span></a><a class="item" href="/posts/%E7%BA%A2%E9%BB%91%E6%A0%91.html"><span class="title">红黑树</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E9%98%9F%E5%88%97.html"><span class="title">内核队列</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8.html"><span class="title">内核链表</span></a><a class="item" href="/posts/offset-of%E5%92%8Ccontainer-of%E5%AE%8F.html"><span class="title">offset_of和container_of宏</span></a></div></widget>
+
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span><a class="cap-action" id="rss" title="Subscribe" href="/atom.xml"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19q0-.825.588-1.412T5 17q.825 0 1.413.588T7 19q0 .825-.587 1.413T5 21m13.5 0q-.65 0-1.088-.475T16.9 19.4q-.275-2.425-1.312-4.537T12.9 11.1q-1.65-1.65-3.762-2.687T4.6 7.1q-.65-.075-1.125-.512T3 5.5q0-.65.45-1.062t1.075-.363q3.075.275 5.763 1.563t4.737 3.337q2.05 2.05 3.338 4.738t1.562 5.762q.05.625-.363 1.075T18.5 21m-6 0q-.625 0-1.075-.437T10.85 19.5q-.225-1.225-.787-2.262T8.65 15.35q-.85-.85-1.888-1.412T4.5 13.15q-.625-.125-1.062-.575T3 11.5q0-.65.45-1.075t1.075-.325q1.825.25 3.413 1.063t2.837 2.062q1.25 1.25 2.063 2.838t1.062 3.412q.1.625-.325 1.075T12.5 21"/></svg></a></div><div class="widget-body fs14"><a class="item title" href="/posts/%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97.html"><span class="title">等待队列</span></a><a class="item title" href="/posts/module-init%E5%AE%8F%E8%AF%A6%E8%A7%A3-insmod%E6%B5%81%E7%A8%8B-THIS-MODULE.html"><span class="title">module_init宏详解&insmod流程&THIS_MODULE</span></a><a class="item title" href="/posts/Linux%E5%86%85%E6%A0%B8%E7%9A%84initcall%E6%9C%BA%E5%88%B6.html"><span class="title">Linux内核的initcall机制</span></a><a class="item title" href="/posts/%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95.html"><span class="title">内核调试</span></a><a class="item title" href="/posts/%E4%BD%BF%E7%94%A8proc%E5%92%8Csysfs%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F.html"><span class="title">使用proc和sysfs文件系统</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/mengchao666" target="_blank" rel="external nofollow noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="#000000" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></a><a class="social" href="/about/" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linejoin="round"><path stroke-linecap="round" stroke-width="1.5" d="M12 21a9 9 0 1 0-8-4.873L3 21l4.873-1c1.236.639 2.64 1 4.127 1"/><path stroke-width="2.25" d="M7.5 12h.01v.01H7.5zm4.5 0h.01v.01H12zm4.5 0h.01v.01h-.01z"/></g></svg></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></g></svg></a><a class="social" href="javaScript:switchTheme();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="#000000" d="M233.54 142.23a8 8 0 0 0-8-2a88.08 88.08 0 0 1-109.8-109.8a8 8 0 0 0-10-10a104.84 104.84 0 0 0-52.91 37A104 104 0 0 0 136 224a103.1 103.1 0 0 0 62.52-20.88a104.84 104.84 0 0 0 37-52.91a8 8 0 0 0-1.98-7.98m-44.64 48.11A88 88 0 0 1 65.66 67.11a89 89 0 0 1 31.4-26A106 106 0 0 0 96 56a104.11 104.11 0 0 0 104 104a106 106 0 0 0 14.92-1.06a89 89 0 0 1-26.02 31.4"/></svg></a><a class="social" href="javaScript:toggleSnow();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 14.25l-.831-.659c-.946-.75-1.419-1.125-1.419-1.591s.473-.841 1.419-1.591L21 9.75m-18 0l.831.659c.946.75 1.419 1.125 1.419 1.591s-.473.841-1.419 1.591L3 14.25M14.572 21l.156-1.059c.178-1.205.267-1.807.674-2.042c.407-.236.972-.011 2.104.437l.994.394M9.428 3l-.156 1.059c-.178 1.205-.267 1.807-.674 2.042c-.407.236-.972.011-2.104-.437L5.5 5.27M5 18.732l1.07-.395c1.218-.448 1.827-.672 2.265-.438s.533.838.724 2.042L9.227 21M19 5.268l-1.07.394c-1.218.45-1.828.673-2.265.439s-.533-.838-.724-2.042L14.773 3M19 12H5m10.5 6l-7-12m7 0l-7 12" color="#000000"/></svg></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97.html">Linux内核知识</a></div><div id="tag"> <span>&nbsp标签：</span><a class="cap breadcrumb-link" href="/tags/kernel/">kernel</a>&nbsp</div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-25T15:17:08.000Z">2024-11-25</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-25T15:17:37.868Z">2024-11-25</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核的initcall机制</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>从根文件系统的挂载说起吧，使能了initd小文件系统的OS，最终会调用到populate_rootfs执行解压挂载的操作，搜索populate最终看到是rootfs_initcall被执行到的，那就从此处开始说起吧，看看内核是如何执行到这个函数的</p>
+<h2 id="一、initcall函数调用流程"><a href="#一、initcall函数调用流程" class="headerlink" title="一、initcall函数调用流程"></a>一、initcall函数调用流程</h2><p>调用链如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">init/main.c<br>调用链如下：<br> <br>start_kernel()<br>    ----&gt;arch_call_rest_init()<br>        ----&gt;rest_init()<br>            ----&gt;kernel_init()<br>                ----&gt;kernel_init_freeable()<br>                    ----&gt;do_basic_setup()<br>                        ----&gt;do_initcalls()<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"> <br><span class="hljs-type">static</span> <span class="hljs-type">initcall_entry_t</span> *initcall_levels[] __initdata = &#123;<br>  __initcall0_start,<br>  __initcall1_start,<br>  __initcall2_start,<br>  __initcall3_start,<br>  __initcall4_start,<br>  __initcall5_start,<br>  __initcall6_start,<br>  __initcall7_start,<br>  __initcall_end,<br>&#125;;<br> <br><span class="hljs-type">static</span> <span class="hljs-type">void</span> __init <span class="hljs-title function_">do_initcalls</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>  <span class="hljs-type">int</span> level;<br> <br>  <span class="hljs-keyword">for</span> (level = <span class="hljs-number">0</span>; level &lt; ARRAY_SIZE(initcall_levels) - <span class="hljs-number">1</span>; level++)<br>    do_initcall_level(level);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>for 循环针对一个指针数组轮询，该数组是一个静态的 initcall_entry_t 类型，这些数据都存放在 __initdata 段。</p>
+<p>指针数组的类型为 initcall_entry_t，是 initcall_t 的另一种叫法</p>
+<p>继续来看下这个指针数组中的元素：__initcall0_start ~ __initcall_end，而这些元素的值在本c文件中已经声明：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">init/main.c<br> <br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall0_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall1_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall2_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall3_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall4_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall5_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall6_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall7_start[];<br><span class="hljs-keyword">extern</span> <span class="hljs-type">initcall_entry_t</span> __initcall_end[];<br></code></pre></td></tr></table></figure>
+
+<p>不难看出，数组 initcall_levels 中元素存放的是这些函数指针数组的首地址。</p>
+<p>那么这些实际的指针数组是在哪里呢？从上文得知，initcall 函数都会被定义成 static initcall_t 类型，并且保存在 .initcall##level##.init 段中，那么 initcall_levels 与其是怎么关联的呢？</p>
+<p>答案在 vmlinux.lds.h 中。</p>
+<h2 id="二、vmlinux-lds-h"><a href="#二、vmlinux-lds-h" class="headerlink" title="二、vmlinux.lds.h"></a>二、vmlinux.lds.h</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c">include/<span class="hljs-keyword">asm</span>-generic/vmlinux.lds.h<br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_CALLS_LEVEL(level)            \</span><br><span class="hljs-meta">    __initcall##level##_start = .;				\</span><br><span class="hljs-meta">    KEEP(*(.initcall##level##.init))			\</span><br><span class="hljs-meta">    KEEP(*(.initcall##level##s.init))			\</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INIT_CALLS              \</span><br><span class="hljs-meta">    __initcall_start = .;					\</span><br><span class="hljs-meta">    KEEP(*(.initcallearly.init))				\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(0)					\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(1)					\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(2)					\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(3)					\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(4)					\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(5)					\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(rootfs)				\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(6)					\</span><br><span class="hljs-meta">    INIT_CALLS_LEVEL(7)					\</span><br><span class="hljs-meta">    __initcall_end = .;</span><br></code></pre></td></tr></table></figure>
+
+<p>在这里首先定义了__initcall_start，将其关联到”.initcallearly.init”段。</p>
+<p>然后对每个level定义了INIT_CALLS_LEVEL(level)，将INIT_CALLS_LEVEL(level)展开之后的结果是定义__initcall##level##_start，并将__initcall##level##_start关联到”.initcall##level##.init”段和”.initcall##level##s.init”段。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c">__initcall_start = .;           \<br>*(.initcallearly.init)          \<br>__initcall0_start = .;          \<br>*(.initcall0.init)              \<br>*(.initcall0s.init)             \<br><span class="hljs-comment">// 省略1、2、3、4、5</span><br>__initcallrootfs_start = .;     \<br>*(.initcallrootfs.init)         \<br>*(.initcallrootfss.init)            \<br>__initcall6_start = .;          \<br>*(.initcall6.init)              \<br>*(.initcall6s.init)             \<br>__initcall7_start = .;          \<br>*(.initcall7.init)              \<br>*(.initcall7s.init)             \<br>__initcall_end = .;<br></code></pre></td></tr></table></figure>
+
+<p>上面这些代码段最终在kernel.img中按先后顺序组织，也就决定了位于其中的一些函数的执行先后顺序。</p>
+<p>在 kernel_init() 初始化完成后，会调用 free_initmem() 对内核 init 段的内存进行释放处理。即 .init 或者 .initcalls 段在内核启动完毕后，这个段中的内存会被释放掉。</p>
+<h2 id="三、do-initcall-level"><a href="#三、do-initcall-level" class="headerlink" title="三、do_initcall_level"></a>三、do_initcall_level</h2><p>do_initcall_level函数定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c">init/main.c<br> <br><span class="hljs-type">static</span> <span class="hljs-type">void</span> __init <span class="hljs-title function_">do_initcall_level</span><span class="hljs-params">(<span class="hljs-type">int</span> level)</span><br>&#123;<br>  <span class="hljs-type">initcall_entry_t</span> *fn;<br> <br>  <span class="hljs-built_in">strcpy</span>(initcall_command_line, saved_command_line);<br>  parse_args(initcall_level_names[level],<br>       initcall_command_line, __start___param,<br>       __stop___param - __start___param,<br>       level, level,<br>       <span class="hljs-literal">NULL</span>, &amp;repair_env_string);<br> <br>  trace_initcall_level(initcall_level_names[level]);<br>  <span class="hljs-keyword">for</span> (fn = initcall_levels[level]; fn &lt; initcall_levels[level+<span class="hljs-number">1</span>]; fn++)<br>    do_one_initcall(initcall_from_entry(fn));<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>do_initcall_level() 函数的参数 level 是之前是initcall_levels 数组的索引，从第0个开始。</p>
+<p>这里再用一个 for 循环，跳到 initcall_levels 内部元素 (函数指针数组)进行轮询，fn 初始值为函数指针数组的起始地址，后面 fn++ 相当于函数指针 +1，即跳到下一个函数指针。</p>
+<p>即for 循环中，根据传入的 level，确定需要轮询的 .initcall##level##.init 段的所有函数指针，一直到下一个 .intcall##(level+1)##.init 段。</p>
+<p>另外，需要注意 do_one_initcall() 的参数就是获取函数指针的内容，而这个内容就是注册进来的 initcall 的实际初始化函数。</p>
+<p>如上面的举例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">rootfs_initcall(populate_rootfs);<br></code></pre></td></tr></table></figure>
+
+<p>这里最终就看成调用 do_one_initcall(populate_rootfs)；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">init/main.c<br> <br><span class="hljs-type">int</span> __init_or_module <span class="hljs-title function_">do_one_initcall</span><span class="hljs-params">(<span class="hljs-type">initcall_t</span> fn)</span><br>&#123;<br>  ...<br><br>  ret = fn();<br>  ...<br>  <span class="hljs-keyword">return</span> ret;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="四、initcall源码"><a href="#四、initcall源码" class="headerlink" title="四、initcall源码"></a>四、initcall源码</h2><p>上文提到过 Linux 对驱动程序提供静态编译进内核和动态加载两种方式，Linux 的 initcall 机制也是根据静态编译和动态加载的两种方式选择不同的编译、运行流程。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c">include/linux/init.h<br> <br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> MODULE</span><br> <br>... <span class="hljs-comment">//静态加载</span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br> <br>... <span class="hljs-comment">//动态加载</span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+
+<p>MODULE 是在编译的时候，通过编译器参数来传入。例如，在编译 ko 时会使用如下两个编译选项，如果是链接到内核，则不会使用：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">//Makefile</span><br> <br>KBUILD_AFLAGS_MODULE  := -DMODULE<br>KBUILD_CFLAGS_MODULE  := -DMODULE<br></code></pre></td></tr></table></figure>
+
+<p>通过 MODULE 的配置，选择静态编译还是动态加载。</p>
+<p>本文将只分析静态编译流程</p>
+<p>内核中定义的initcall如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs c">include/linux/init.h<br> <br> <br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * Early initcalls run before initializing SMP.</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * Only for built-in code, not modules.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> early_initcall(fn)    __define_initcall(fn, early)</span><br> <br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * A &quot;pure&quot; initcall has no dependencies on anything else, and purely</span><br><span class="hljs-comment"> * initializes variables that couldn&#x27;t be statically initialized.</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * This only exists for built-in code, not for modules.</span><br><span class="hljs-comment"> * Keep main.c:initcall_level_names[] in sync.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> pure_initcall(fn)    __define_initcall(fn, 0)</span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> core_initcall(fn)    __define_initcall(fn, 1)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> core_initcall_sync(fn)    __define_initcall(fn, 1s)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> postcore_initcall(fn)    __define_initcall(fn, 2)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> postcore_initcall_sync(fn)  __define_initcall(fn, 2s)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> arch_initcall(fn)    __define_initcall(fn, 3)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> arch_initcall_sync(fn)    __define_initcall(fn, 3s)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> subsys_initcall(fn)    __define_initcall(fn, 4)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> subsys_initcall_sync(fn)  __define_initcall(fn, 4s)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> fs_initcall(fn)      __define_initcall(fn, 5)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> fs_initcall_sync(fn)    __define_initcall(fn, 5s)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> rootfs_initcall(fn)    __define_initcall(fn, rootfs)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> device_initcall(fn)    __define_initcall(fn, 6)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> device_initcall_sync(fn)  __define_initcall(fn, 6s)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> late_initcall(fn)    __define_initcall(fn, 7)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> late_initcall_sync(fn)    __define_initcall(fn, 7s)</span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __initcall(fn) device_initcall(fn)</span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __exitcall(fn)            \</span><br><span class="hljs-meta">  static exitcall_t __exitcall_##fn __exit_call = fn</span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> console_initcall(fn)  ___define_initcall(fn, con, .con_initcall)</span><br></code></pre></td></tr></table></figure>
+
+<p>对于静态编译 initcall 接口如上，其中 <strong>pure_initcall()</strong>  只能在静态编译中存在。</p>
+<p>当然，对于静态编译的驱动也可以调佣 <strong>module_init()</strong>  接口：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">include/linux/module.h<br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> module_init(x)  __initcall(x);</span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> module_exit(x)  __exitcall(x);</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>module_init在内核中是有两种定义的，module_init定义在&lt;linux&#x2F;module.h&gt;中，当包含此头文件的代码中，没有定义MODULE宏时，module_init定义为initcall形式</strong></p>
+</blockquote>
+<h2 id="五、initcall级别"><a href="#五、initcall级别" class="headerlink" title="五、initcall级别"></a>五、initcall级别</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c">early--&gt;<br><span class="hljs-number">0</span>--&gt;<span class="hljs-number">0</span>s--&gt;<br><span class="hljs-number">1</span>--&gt;<span class="hljs-number">1</span>s--&gt;<br><span class="hljs-number">2</span>--&gt;<span class="hljs-number">2</span>s--&gt;<br><span class="hljs-number">3</span>--&gt;<span class="hljs-number">3</span>s--&gt;<br><span class="hljs-number">4</span>--&gt;<span class="hljs-number">4</span>s--&gt;<br><span class="hljs-number">5</span>--&gt;<span class="hljs-number">5</span>s--&gt;<br>rootfs--&gt;<br><span class="hljs-number">6</span>--&gt;<span class="hljs-number">6</span>s--&gt;<br><span class="hljs-number">7</span>--&gt;<span class="hljs-number">7</span>s--&gt;<br>console<br></code></pre></td></tr></table></figure>
+
+<p>__define_initcall实现：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs c">include/linux/init.h<br> <br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> CONFIG_LTO_CLANG</span><br>  <span class="hljs-comment">/*</span><br><span class="hljs-comment">   * With LTO, the compiler doesn&#x27;t necessarily obey link order for</span><br><span class="hljs-comment">   * initcalls, and the initcall variable needs to be globally unique</span><br><span class="hljs-comment">   * to avoid naming collisions.  In order to preserve the correct</span><br><span class="hljs-comment">   * order, we add each variable into its own section and generate a</span><br><span class="hljs-comment">   * linker script (in scripts/link-vmlinux.sh) to ensure the order</span><br><span class="hljs-comment">   * remains correct.  We also add a __COUNTER__ prefix to the name,</span><br><span class="hljs-comment">   * so we can retain the order of initcalls within each compilation</span><br><span class="hljs-comment">   * unit, and __LINE__ to make the names more unique.</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-meta">#<span class="hljs-keyword">define</span> ___lto_initcall(c, l, fn, id, __sec) \</span><br><span class="hljs-meta">  static initcall_t __initcall_##c##_##l##_##fn##id __used \</span><br><span class="hljs-meta">    __attribute__((__section__( #__sec \</span><br><span class="hljs-meta">      __stringify(.init..##c##_##l##_##fn)))) = fn;</span><br>  <span class="hljs-meta">#<span class="hljs-keyword">define</span> __lto_initcall(c, l, fn, id, __sec) \</span><br><span class="hljs-meta">  ___lto_initcall(c, l, fn, id, __sec)</span><br> <br>  <span class="hljs-meta">#<span class="hljs-keyword">define</span> ___define_initcall(fn, id, __sec) \</span><br><span class="hljs-meta">  __lto_initcall(__COUNTER__, __LINE__, fn, id, __sec)</span><br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br>  <span class="hljs-meta">#<span class="hljs-keyword">define</span> ___define_initcall(fn, id, __sec) \</span><br><span class="hljs-meta">  static initcall_t __initcall_##fn##id __used \</span><br><span class="hljs-meta">    __attribute__((__section__(#__sec <span class="hljs-string">&quot;.init&quot;</span>))) = fn;</span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __define_initcall(fn, id) ___define_initcall(fn, id, .initcall##id)</span><br></code></pre></td></tr></table></figure>
+
+<p>下文会继续细化分析，这里提前提示：</p>
+<p>__define_initcall() 其实就是定义了一个 static initcall_t 的函数指针</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">include/linux/init.h<br> <br><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">int</span> <span class="hljs-params">(*<span class="hljs-type">initcall_t</span>)</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">void</span> <span class="hljs-params">(*<span class="hljs-type">exitcall_t</span>)</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="六、attribute详解"><a href="#六、attribute详解" class="headerlink" title="六、attribute详解"></a>六、attribute详解</h2><p>(1)、__used</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">include/linux/compiler_attributes.h<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __used                          __attribute__((__used__))</span><br></code></pre></td></tr></table></figure>
+
+<p>这是一种 attribute 修饰属性的一种，意思是告诉编译器：这个静态符号在编译的时候，即使没有使用也要保留，不能优化掉。</p>
+<p>(2)、__attribute__ ((<strong>section</strong>(…)))<br><strong>attribute</strong> 是 GNU C 的一大特色，可以用来修饰对象、函数、结构体类型等等。</p>
+<p>这里用来修改 section，意思是将作用的函数放入指定的 section name 对应的段中。</p>
+<p>(3)、 __stringify()</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">include/linux/stringify.h<br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __stringify_1(x...)  #x</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __stringify(x...)  __stringify_1(x)</span><br></code></pre></td></tr></table></figure>
+
+<p>将 __stringify() 中内容字符串化。</p>
+<h2 id="七、例子"><a href="#七、例子" class="headerlink" title="七、例子"></a>七、例子</h2><p>以静态的module_init定义为例：</p>
+<p>假如，我们在驱动使用如下接口：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">module_init(hello_init);<br></code></pre></td></tr></table></figure>
+
+<p>那么，在编译的时候编译器会通过 initcall 接口产生：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">initcall_t</span> __initcall_1_23_hello_init6 __attribute__(__used) \<br>    __attribute__((__section__(<span class="hljs-string">&quot;.initcall6.init..1_23_hello_init&quot;</span>))) = hello_init;<br></code></pre></td></tr></table></figure>
+
+<h3 id="linux-编译后的initcall-函数"><a href="#linux-编译后的initcall-函数" class="headerlink" title="linux 编译后的initcall 函数"></a>linux 编译后的initcall 函数</h3><p>查看编译好的 <strong>System.map：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs bash">...<br>ffffffc012032ee0 d __initcall_223_42_trace_init_flags_sys_enterearly<br>ffffffc012032ee0 D __initcall_start<br>ffffffc012032ee0 D __setup_end<br>ffffffc012032ee8 d __initcall_224_66_trace_init_flags_sys_exitearly<br>ffffffc012032ef0 d __initcall_163_146_cpu_suspend_initearly<br>ffffffc012032ef8 d __initcall_151_267_asids_initearly<br>ffffffc012032f00 d __initcall_167_688_spawn_ksoftirqdearly<br>ffffffc012032f08 d __initcall_343_6656_migration_initearly<br>...<br>ffffffc012032f90 d __initcall_312_768_initialize_ptr_randomearly<br>ffffffc012032f98 D __initcall0_start<br>ffffffc012032f98 d __initcall_241_771_bpf_jit_charge_init0<br>ffffffc012032fa0 d __initcall_141_53_init_mmap_min_addr0<br>ffffffc012032fa8 d __initcall_209_6528_pci_realloc_setup_params0<br>ffffffc012032fb0 d __initcall_339_1143_net_ns_init0<br>ffffffc012032fb8 D __initcall1_start<br>ffffffc012032fb8 d __initcall_160_1437_fpsimd_init1<br>ffffffc012032fc0 d __initcall_181_669_tagged_addr_init1<br>...<br>ffffffc012033178 d __initcall_347_1788_init_default_flow_dissectors1<br>ffffffc012033180 d __initcall_360_2821_netlink_proto_init1<br>ffffffc012033188 D __initcall2_start<br>ffffffc012033188 d __initcall_165_139_debug_monitors_init2<br>ffffffc012033190 d __initcall_141_333_irq_sysfs_init2<br>...<br>ffffffc0120332b8 d __initcall_304_814_kobject_uevent_init2<br>ffffffc0120332c0 d __initcall_184_1686_msm_rpm_driver_init2s<br>ffffffc0120332c8 D __initcall3_start<br>ffffffc0120332c8 d __initcall_173_390_debug_traps_init3<br>ffffffc0120332d0 d __initcall_161_275_reserve_memblock_reserved_regions3<br>...<br>ffffffc012033370 d __initcall_132_5273_gsi_init3<br>ffffffc012033378 d __initcall_149_547_of_platform_default_populate_init3s<br>ffffffc012033380 D __initcall4_start<br>...<br>ffffffc012033878 D __initcall5_start<br>...<br>ffffffc0120339d8 d __initcall_317_1188_xsk_init5<br>ffffffc0120339e0 d __initcall_211_194_pci_apply_final_quirks5s<br>ffffffc0120339e8 d __initcall_168_680_populate_rootfsrootfs<br>ffffffc0120339e8 D __initcallrootfs_start<br>ffffffc0120339f0 D __initcall6_start<br>...<br>ffffffc012034b30 D __initcall7_start<br>...<br>ffffffc012034c88 d __initcall_150_554_of_platform_sync_state_init7s<br>ffffffc012034c90 d __initcall_123_29_alsa_sound_last_init7s<br>ffffffc012034c98 D __con_initcall_start<br>ffffffc012034c98 d __initcall_151_246_hvc_console_initcon<br>ffffffc012034c98 D __initcall_end<br>ffffffc012034ca0 D __con_initcall_end<br></code></pre></td></tr></table></figure>
+
+<p>从 System.map 得知：</p>
+<ul>
+<li>从 __initcall_start ~ __initcall_end 所有函数指针都是连续的，相差8 个字节；</li>
+<li>__initcall_start 就是第一个 early 级别的 initcall 函数指针，同理 __initcall0_start 就是第一个 level 0 级别的initcall 函数指针，以此类推；</li>
+<li>rootfs 级别的 initcall 函数是插在 level 5s 之后，level 6 级别之前；</li>
+<li>console 级别的函数在 level 7s 之后，__initcall_end 之前；<br>当然通过命令 readelf 或者 objdump (objdump -h vmlinux.o)都能看到各个字段</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs c">Sections:<br>Idx Name          Size      VMA               LMA               File off  Algn<br>  <span class="hljs-number">0</span> .initcall0.init <span class="hljs-number">00000020</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000040</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">1</span> .initcall1.init <span class="hljs-number">000001</span>d0  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000060</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">2</span> .initcall2.init <span class="hljs-number">00000138</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000230</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">3</span> .initcall2s.init <span class="hljs-number">00000008</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000368</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">4</span> .initcall3.init <span class="hljs-number">000000b</span>0  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000370</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">5</span> .initcall3s.init <span class="hljs-number">00000008</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000420</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">6</span> .initcall4.init <span class="hljs-number">000004f</span>0  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000428</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">7</span> .initcall4s.init <span class="hljs-number">00000008</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000918</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">8</span> .initcall5.init <span class="hljs-number">00000168</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000920</span>  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br>  <span class="hljs-number">9</span> .initcall5s.init <span class="hljs-number">00000008</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000</span>a88  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br> <span class="hljs-number">10</span> .initcall6.init <span class="hljs-number">00001140</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00000</span>a90  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br> <span class="hljs-number">11</span> .initcall7.init <span class="hljs-number">00000140</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00001b</span>d0  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br> <span class="hljs-number">12</span> .initcall7s.init <span class="hljs-number">00000028</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00001</span>d10  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br> <span class="hljs-number">13</span> .con_initcall.init <span class="hljs-number">00000008</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00001</span>d38  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br> <span class="hljs-number">14</span> .initcallearly.init <span class="hljs-number">000000b</span>8  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00001</span>d40  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br> <span class="hljs-number">15</span> .initcallrootfs.init <span class="hljs-number">00000008</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">0000000000000000</span>  <span class="hljs-number">00001</span>df8  <span class="hljs-number">2</span>**<span class="hljs-number">3</span><br>                  CONTENTS, ALLOC, LOAD, RELOC, DATA<br></code></pre></td></tr></table></figure>
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/posts/module-init%E5%AE%8F%E8%AF%A6%E8%A7%A3-insmod%E6%B5%81%E7%A8%8B-THIS-MODULE.html">module_init宏详解&insmod流程&THIS_MODULE</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/posts/%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95.html">内核调试</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\posts\DTS设备树.html" title="DTS设备树"><span class="title">DTS设备树</span></a><a class="item" href="\posts\module-init宏详解-insmod流程-THIS-MODULE.html" title="module_init宏详解&insmod流程&THIS_MODULE"><span class="title">module_init宏详解&insmod流程&THIS_MODULE</span></a><a class="item" href="\posts\offset-of和container-of宏.html" title="offset_of和container_of宏"><span class="title">offset_of和container_of宏</span></a><a class="item" href="\posts\中断下半部-tasklet.html" title="中断下半部-tasklet"><span class="title">中断下半部-tasklet</span></a><a class="item" href="\posts\中断下半部-workqueue.html" title="中断下半部-workqueue"><span class="title">中断下半部-workqueue</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/topic/">专栏</a><a href="/archives/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/mengchao666/Linux-0.11code">Linux 0.11</a></div><div class="sitemap-group"><span class="fs15">探索</span><a href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html">站点</a><a href="/explore/notes/%E6%8E%A2%E7%B4%A2%E8%80%85%E7%AC%94%E8%AE%B0.html">笔记</a></div><div class="sitemap-group"><span class="fs15">友链</span><a href="/about/">朋友圈</a></div></div><div class="text"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/assets/images/keyboard.jpg" alt="描述文字" style="float: right; width: 60px; margin-left: 20px;">
+<center>
+  <div>
+    <div>
+      © 2024
+      <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com">mengchao666</a>
+      开心地使用 <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/xaoxuu/hexo-theme-stellar">Stellar</a>
+      主题，星际地球第<span id="runtime_span"></span>
+    </div>
+    <script type="text/javascript">
+      function show_runtime() {
+          window.setTimeout("show_runtime()", 1000);
+          X = new Date("08/18/2024 00:00:00");
+          Y = new Date();
+          T = (Y.getTime() - X.getTime());
+          M = 24 * 60 * 60 * 1000;
+          a = T / M;
+          A = Math.floor(a);
+          runtime_span.innerHTML = A + "天"
+      }
+      show_runtime();
+    </script>
+  </div>
+</center>
+<div class="totalcount" style="text-align:center">收集了 54 颗星星 ✧ </span><span class="post-count">共 83.3k 粒星尘，好像写完一本 鲁迅 的《呐喊》了啊</div></div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="true"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81initcall%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B"><span class="toc-text">一、initcall函数调用流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81vmlinux-lds-h"><span class="toc-text">二、vmlinux.lds.h</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81do-initcall-level"><span class="toc-text">三、do_initcall_level</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81initcall%E6%BA%90%E7%A0%81"><span class="toc-text">四、initcall源码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81initcall%E7%BA%A7%E5%88%AB"><span class="toc-text">五、initcall级别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81attribute%E8%AF%A6%E8%A7%A3"><span class="toc-text">六、attribute详解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E4%BE%8B%E5%AD%90"><span class="toc-text">七、例子</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#linux-%E7%BC%96%E8%AF%91%E5%90%8E%E7%9A%84initcall-%E5%87%BD%E6%95%B0"><span class="toc-text">linux 编译后的initcall 函数</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+  <widget class="widget-wrapper categories-widget">
+    <div class="widget-header categories-header dis-select">
+      <span class="name">分类索引</span>
+    </div>
+    <div class='post-list'>
+      <article class='' id='cats'>
+        
+          <div>
+            <a class="cat" href="/categories/C%E8%AF%AD%E8%A8%80/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>C语言</span>
+              <span class='badge'>(11)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux</span>
+              <span class='badge'>(3)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux%E5%B7%A5%E5%85%B7/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux工具</span>
+              <span class='badge'>(15)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Makefile/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Makefile</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/dm-verity/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>dm-verity</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/git/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>git</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/kernel/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>kernel</span>
+              <span class='badge'>(17)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E4%BA%8C%E5%8F%89%E6%A0%91/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>二叉树</span>
+              <span class='badge'>(4)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E7%BD%91%E7%AB%99/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>网站</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+      </article>
+    </div>
+  </widget>
+
+
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"codeblock":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'light'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"twikoo":{"js":"/js/services/twikoo_new.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+
+
+
+<!-- inject -->
+<script src="/js/custom.js"></script><script src="/js/code-block.js"></script><script src="https://cdn.jsdelivr.net/gh/huangwb8/bloghelper@latest/js/input-with-fire.js"></script><script src="https://cdn.staticfile.org/jquery/3.6.3/jquery.min.js"></script><script src="/static/js/snow.js"></script>
+</div><!-- hexo injector body_end start -->
+  <script>
+    mediumZoom(".l_body .content p img", { background: "var(--site-bg)" })
+  </script>
+  <!-- hexo injector body_end end --></body></html>
+<script>var posts=["posts/94、二叉树的中序遍历.html","posts/DTS设备树.html","posts/Linux内核的initcall机制.html","posts/Makefile基础语法.html","posts/addr2line.html","posts/98、验证二叉搜索树.html","posts/96、不同的二叉搜索树.html","posts/dd命令.html","posts/find.html","posts/dm-verity.html","posts/OOM.html","posts/grep.html","posts/gtest.html","/posts/1.html","posts/module-init宏详解-insmod流程-THIS-MODULE.html","posts/ftpget.html","posts/mmap.html","posts/objdump.html","posts/poll、epoll.html","posts/offset-of和container-of宏.html","posts/readelf.html","posts/objcopy.html","posts/scp.html","posts/nm.html","posts/sed.html","posts/tar.html","posts/tcpdump.html","posts/中断下半部-tasklet.html","posts/中断下半部-workqueue.html","posts/proc目录下pid各文件目录含义.html","posts/互斥锁、信号量、原子操作、自旋锁.html","posts/使用proc和sysfs文件系统.html","posts/二叉树算法核心纲领.html","posts/top.html","posts/内核内存申请函数.html","posts/内存申请函数.html","posts/内存检测工具.html","posts/内核定时器-hrtime高精度定时器.html","posts/内核链表.html","posts/内核队列.html","posts/内核调试.html","posts/动态链接库、静态链接库.html","posts/字符串函数.html","posts/指针.html","posts/内核线程.html","posts/系统调用流程.html","posts/等待队列.html","posts/红黑树.html","posts/网站部署-写作.html","posts/线程.html","posts/进程间通信.html","posts/查找内核符号.html","posts/锁、信号量.html","posts/预处理、编译、汇编、链接.html"];function toRandomPost(){ window.location.href = window.location.origin + posts[Math.floor(Math.random()*posts.length)]; };</script>

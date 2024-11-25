@@ -1,0 +1,806 @@
+
+<!DOCTYPE html><html lang="zh-CN" data-theme="light">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>等待队列 - mengchao666</title>
+
+  
+    <meta name="description" content="一、Linux等待队列概述Linux内核的等待队列（Wait Queue）是重要的数据结构，与进程调度机制紧密相关联，可以用来同步对系统资源的访问、异步事件通知、跨进程通信等。 在Linux中，等待队列以循环链表为基础结构，包括两种数据结构：等待队列头(wait queue head)和等待队列元素(wait queue)，整个等待队列由等待队列头进行管理。下文将用内核源码（基于Linux ker">
+<meta property="og:type" content="article">
+<meta property="og:title" content="等待队列">
+<meta property="og:url" content="http://example.com/posts/%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97.html">
+<meta property="og:site_name" content="mengchao666">
+<meta property="og:description" content="一、Linux等待队列概述Linux内核的等待队列（Wait Queue）是重要的数据结构，与进程调度机制紧密相关联，可以用来同步对系统资源的访问、异步事件通知、跨进程通信等。 在Linux中，等待队列以循环链表为基础结构，包括两种数据结构：等待队列头(wait queue head)和等待队列元素(wait queue)，整个等待队列由等待队列头进行管理。下文将用内核源码（基于Linux ker">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogblog2f3220332bf3f6b8af6038fe1003a5c8.png">
+<meta property="article:published_time" content="2024-11-25T15:20:39.000Z">
+<meta property="article:modified_time" content="2024-11-25T15:21:11.300Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="kernel">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/mengchao666/picture/main/blogblog2f3220332bf3f6b8af6038fe1003a5c8.png">
+  
+  
+  
+  <meta name="keywords" content="kernel">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="mengchao666" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+
+  
+    
+<link rel="stylesheet" href="https://gcore.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+
+  
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="/css/code-block.css"><link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'">
+<!-- hexo injector head_end start -->
+    <style>
+      @font-face {
+        font-family: 'hytmr';
+        font-style: normal;
+        font-weight: normal;
+        font-display: swap;
+        src: url(https://cdn.coolchong.cn/%E5%AD%97%E4%BD%93%E6%A0%B7%E5%BC%8F/hytmr55.woff) format('woff');
+      }    
+    </style>
+  
+    <style>
+    .medium-zoom-overlay {
+      z-index: 20;
+    }
+    
+    .medium-zoom-image {
+      z-index: 21;
+    }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/style.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+  <!-- hexo injector head_end end --></head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="/assets/images/avatar.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">mengchao666</div><div class="sub cap">个人记录</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="首页" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Linux内核知识</span></div><div class="widget-body"><a class="item active" href="/posts/%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97.html"><span class="title">等待队列</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/posts/module-init%E5%AE%8F%E8%AF%A6%E8%A7%A3-insmod%E6%B5%81%E7%A8%8B-THIS-MODULE.html"><span class="title">module_init宏详解&insmod流程&THIS_MODULE</span></a><a class="item" href="/posts/Linux%E5%86%85%E6%A0%B8%E7%9A%84initcall%E6%9C%BA%E5%88%B6.html"><span class="title">Linux内核的initcall机制</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95.html"><span class="title">内核调试</span></a><a class="item" href="/posts/%E4%BD%BF%E7%94%A8proc%E5%92%8Csysfs%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F.html"><span class="title">使用proc和sysfs文件系统</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-hrtime%E9%AB%98%E7%B2%BE%E5%BA%A6%E5%AE%9A%E6%97%B6%E5%99%A8.html"><span class="title">内核定时器&hrtime高精度定时器</span></a><a class="item" href="/posts/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B.html"><span class="title">系统调用流程</span></a><a class="item" href="/posts/%E4%BA%92%E6%96%A5%E9%94%81%E3%80%81%E4%BF%A1%E5%8F%B7%E9%87%8F%E3%80%81%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C%E3%80%81%E8%87%AA%E6%97%8B%E9%94%81.html"><span class="title">互斥锁、信号量、原子操作、自旋锁</span></a><a class="item" href="/posts/DTS%E8%AE%BE%E5%A4%87%E6%A0%91.html"><span class="title">DTS设备树</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E7%BA%BF%E7%A8%8B.html"><span class="title">内核线程</span></a><a class="item" href="/posts/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8-workqueue.html"><span class="title">中断下半部-workqueue</span></a><a class="item" href="/posts/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8-tasklet.html"><span class="title">中断下半部-tasklet</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7%E5%87%BD%E6%95%B0.html"><span class="title">内核内存申请函数</span></a><a class="item" href="/posts/%E7%BA%A2%E9%BB%91%E6%A0%91.html"><span class="title">红黑树</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E9%98%9F%E5%88%97.html"><span class="title">内核队列</span></a><a class="item" href="/posts/%E5%86%85%E6%A0%B8%E9%93%BE%E8%A1%A8.html"><span class="title">内核链表</span></a><a class="item" href="/posts/offset-of%E5%92%8Ccontainer-of%E5%AE%8F.html"><span class="title">offset_of和container_of宏</span></a></div></widget>
+
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span><a class="cap-action" id="rss" title="Subscribe" href="/atom.xml"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19q0-.825.588-1.412T5 17q.825 0 1.413.588T7 19q0 .825-.587 1.413T5 21m13.5 0q-.65 0-1.088-.475T16.9 19.4q-.275-2.425-1.312-4.537T12.9 11.1q-1.65-1.65-3.762-2.687T4.6 7.1q-.65-.075-1.125-.512T3 5.5q0-.65.45-1.062t1.075-.363q3.075.275 5.763 1.563t4.737 3.337q2.05 2.05 3.338 4.738t1.562 5.762q.05.625-.363 1.075T18.5 21m-6 0q-.625 0-1.075-.437T10.85 19.5q-.225-1.225-.787-2.262T8.65 15.35q-.85-.85-1.888-1.412T4.5 13.15q-.625-.125-1.062-.575T3 11.5q0-.65.45-1.075t1.075-.325q1.825.25 3.413 1.063t2.837 2.062q1.25 1.25 2.063 2.838t1.062 3.412q.1.625-.325 1.075T12.5 21"/></svg></a></div><div class="widget-body fs14"><a class="item title" href="/posts/%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97.html"><span class="title">等待队列</span></a><a class="item title" href="/posts/module-init%E5%AE%8F%E8%AF%A6%E8%A7%A3-insmod%E6%B5%81%E7%A8%8B-THIS-MODULE.html"><span class="title">module_init宏详解&insmod流程&THIS_MODULE</span></a><a class="item title" href="/posts/Linux%E5%86%85%E6%A0%B8%E7%9A%84initcall%E6%9C%BA%E5%88%B6.html"><span class="title">Linux内核的initcall机制</span></a><a class="item title" href="/posts/%E5%86%85%E6%A0%B8%E8%B0%83%E8%AF%95.html"><span class="title">内核调试</span></a><a class="item title" href="/posts/%E4%BD%BF%E7%94%A8proc%E5%92%8Csysfs%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F.html"><span class="title">使用proc和sysfs文件系统</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/mengchao666" target="_blank" rel="external nofollow noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="#000000" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></a><a class="social" href="/about/" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linejoin="round"><path stroke-linecap="round" stroke-width="1.5" d="M12 21a9 9 0 1 0-8-4.873L3 21l4.873-1c1.236.639 2.64 1 4.127 1"/><path stroke-width="2.25" d="M7.5 12h.01v.01H7.5zm4.5 0h.01v.01H12zm4.5 0h.01v.01h-.01z"/></g></svg></a><a class="social" href="/atom.xml" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></g></svg></a><a class="social" href="javaScript:switchTheme();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256"><path fill="#000000" d="M233.54 142.23a8 8 0 0 0-8-2a88.08 88.08 0 0 1-109.8-109.8a8 8 0 0 0-10-10a104.84 104.84 0 0 0-52.91 37A104 104 0 0 0 136 224a103.1 103.1 0 0 0 62.52-20.88a104.84 104.84 0 0 0 37-52.91a8 8 0 0 0-1.98-7.98m-44.64 48.11A88 88 0 0 1 65.66 67.11a89 89 0 0 1 31.4-26A106 106 0 0 0 96 56a104.11 104.11 0 0 0 104 104a106 106 0 0 0 14.92-1.06a89 89 0 0 1-26.02 31.4"/></svg></a><a class="social" href="javaScript:toggleSnow();" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 14.25l-.831-.659c-.946-.75-1.419-1.125-1.419-1.591s.473-.841 1.419-1.591L21 9.75m-18 0l.831.659c.946.75 1.419 1.125 1.419 1.591s-.473.841-1.419 1.591L3 14.25M14.572 21l.156-1.059c.178-1.205.267-1.807.674-2.042c.407-.236.972-.011 2.104.437l.994.394M9.428 3l-.156 1.059c-.178 1.205-.267 1.807-.674 2.042c-.407.236-.972.011-2.104-.437L5.5 5.27M5 18.732l1.07-.395c1.218-.448 1.827-.672 2.265-.438s.533.838.724 2.042L9.227 21M19 5.268l-1.07.394c-1.218.45-1.828.673-2.265.439s-.533-.838-.724-2.042L14.773 3M19 12H5m10.5 6l-7-12m7 0l-7 12" color="#000000"/></svg></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97.html">Linux内核知识</a></div><div id="tag"> <span>&nbsp标签：</span><a class="cap breadcrumb-link" href="/tags/kernel/">kernel</a>&nbsp</div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-11-25T15:20:39.000Z">2024-11-25</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-11-25T15:21:11.300Z">2024-11-25</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>等待队列</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h3 id="一、Linux等待队列概述"><a href="#一、Linux等待队列概述" class="headerlink" title="一、Linux等待队列概述"></a>一、Linux等待队列概述</h3><p>Linux内核的等待队列（Wait Queue）是重要的数据结构，与进程调度机制紧密相关联，可以用来同步对系统资源的访问、异步事件通知、跨进程通信等。</p>
+<p>在Linux中，等待队列以循环链表为基础结构，包括两种数据结构：等待队列头(wait queue head)和等待队列元素(wait queue)，整个等待队列由等待队列头进行管理。下文将用内核源码（基于Linux kernel 5.2）对等待队列进行介绍，详细说明采用等待队列实现进程阻塞和唤醒的方法。</p>
+<h3 id="二、等待队列头和等待队列元素"><a href="#二、等待队列头和等待队列元素" class="headerlink" title="二、等待队列头和等待队列元素"></a>二、等待队列头和等待队列元素</h3><p>等待队列以循环链表为基础结构，链表头和链表项分别为等待队列头和等待队列元素，分别用结构体 wait_queue_head_t 和 wait_queue_entry_t 描述（定义在 linux&#x2F;wait.h ）。</p>
+<p>2.1 基本概念</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">wait_queue_head</span> &#123;</span><br>    <span class="hljs-type">spinlock_t</span>          lock;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span>    <span class="hljs-title">head</span>;</span><br>&#125;;<br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">wait_queue_head</span> <span class="hljs-title">wait_queue_head_t</span>;</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">int</span> <span class="hljs-params">(*<span class="hljs-type">wait_queue_func_t</span>)</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry, <span class="hljs-type">unsigned</span> mode, <span class="hljs-type">int</span> flags, <span class="hljs-type">void</span> *key)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">default_wake_function</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry, <span class="hljs-type">unsigned</span> mode, <span class="hljs-type">int</span> flags, <span class="hljs-type">void</span> *key)</span>;<br><span class="hljs-comment">/* wait_queue_entry::flags */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> WQ_FLAG_EXCLUSIVE   0x01</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> WQ_FLAG_WOKEN       0x02</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> WQ_FLAG_BOOKMARK    0x04</span><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * A single wait-queue entry structure:</span><br><span class="hljs-comment"> */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">wait_queue_entry</span> &#123;</span><br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>        flags;<br>    <span class="hljs-type">void</span>                *private;<br>    <span class="hljs-type">wait_queue_func_t</span>   func;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_head</span>    <span class="hljs-title">entry</span>;</span><br>&#125;;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">wait_queue_entry</span> <span class="hljs-title">wait_queue_entry_t</span>;</span><br></code></pre></td></tr></table></figure>
+
+<p>等待队列头结构包括一个自旋锁和一个链表头。等待队列元素除了包括链表项，还包括：</p>
+<ul>
+<li>flags : 标识队列元素状态和属性</li>
+<li><code>*private</code>: 用于指向关联进程 task_struct 结构体的指针<ul>
+<li>func : 函数指针，用于指向等待队列被唤醒时的回调的唤醒函数</li>
+</ul>
+</li>
+</ul>
+<p>以进程阻塞和唤醒的过程为例，等待队列的使用场景可以简述为：</p>
+<p>进程 A 因等待某些资源（依赖进程 B 的某些操作）而不得不进入阻塞状态，便将当前进程加入到等待队列 Q 中。进程 B 在一系列操作后，可通知进程 A 所需资源已到位，便调用唤醒函数 wake up 来唤醒等待队列上 Q 的进程，注意此时所有等待在队列 Q 上的进程均被置为可运行状态。</p>
+<p>借助上述描述场景，说明等待队列元素属性 flags 标志的作用，下文也将结合源码进行详细解读。</p>
+<p>(1) WQ_FLAG_EXCLUSIVE </p>
+<p>上述场景中看到，当某进程调用 wake up 函数唤醒等待队列时，队列上所有的进程均被唤醒，在某些场合会出现唤醒的所有进程中，只有某个进程获得了期望的资源，而其他进程由于资源被占用不得不再次进入休眠。如果等待队列中进程数量庞大时，该行为将影响系统性能。</p>
+<p>内核增加了”独占等待”(WQ_FLAG_EXCLUSIVE)来解决此类问题。一个独占等待的行为和通常的休眠类似，但有如下两个重要的不同：</p>
+<p>等待队列元素设置 WQ_FLAG_EXCLUSIVE 标志时，会被添加到等待队列的尾部，而非头部。</p>
+<p>在某等待队列上调用 wake up 时，执行独占等待的进程每次只会唤醒其中第一个（所有非独占等待进程仍会被同时唤醒）。</p>
+<p>(2) WQ_FLAG_WOKEN </p>
+<p>暂时还未理解，TODO</p>
+<p>(3) WQ_FLAG_BOOKMARK </p>
+<p>用于 wake_up() 唤醒等待队列时实现分段遍历，减少单次对自旋锁的占用时间。</p>
+<h3 id="三、-等待队列的创建和初始化"><a href="#三、-等待队列的创建和初始化" class="headerlink" title="三、 等待队列的创建和初始化"></a>三、 等待队列的创建和初始化</h3><p>等待队列头的定义和初始化有两种方式： init_waitqueue_head(&amp;wq_head) 和宏定义  DECLARE_WAIT_QUEUE_HEAD(name)   。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> init_waitqueue_head(wq_head)                            \</span><br><span class="hljs-meta">    do &#123;                                                        \</span><br><span class="hljs-meta">        static struct lock_class_key __key;                     \</span><br><span class="hljs-meta">        __init_waitqueue_head((wq_head), #wq_head, &amp;__key);     \</span><br><span class="hljs-meta">    &#125; while (0)</span><br><br><span class="hljs-type">void</span> __init_waitqueue_head(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *name, <span class="hljs-keyword">struct</span> lock_class_key *key)<br>&#123;<br>    spin_lock_init(&amp;wq_head-&gt;lock);<br>    lockdep_set_class_and_name(&amp;wq_head-&gt;lock, key, name);<br>    INIT_LIST_HEAD(&amp;wq_head-&gt;head);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> DECLARE_WAIT_QUEUE_HEAD(name)                       \</span><br><span class="hljs-meta">    struct wait_queue_head name = __WAIT_QUEUE_HEAD_INITIALIZER(name)</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __WAIT_QUEUE_HEAD_INITIALIZER(name) &#123;               \</span><br><span class="hljs-meta">    .lock       = __SPIN_LOCK_UNLOCKED(name.lock),          \</span><br><span class="hljs-meta">    .head       = &#123; &amp;(name).head, &amp;(name).head &#125; &#125;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="四、等待队列元素的创建和初始化"><a href="#四、等待队列元素的创建和初始化" class="headerlink" title="四、等待队列元素的创建和初始化"></a>四、等待队列元素的创建和初始化</h3><p>创建等待队列元素较为普遍的一种方式是调用宏定义 DECLARE_WAITQUEUE(name, task) ，将定义一个名为 name 的等待队列元素， private 数据指向给定的关联进程结构体 task ，唤醒函数为 default_wake_function() 。后文介绍唤醒细节时详细介绍唤醒函数的工作。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> DECLARE_WAITQUEUE(name, tsk)                        \</span><br><span class="hljs-meta">    struct wait_queue_entry name = __WAITQUEUE_INITIALIZER(name, tsk)</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __WAITQUEUE_INITIALIZER(name, tsk) &#123;                \</span><br><span class="hljs-meta">    .private    = tsk,                                      \</span><br><span class="hljs-meta">    .func       = default_wake_function,                    \</span><br><span class="hljs-meta">    .entry      = &#123; NULL, NULL &#125; &#125;</span><br></code></pre></td></tr></table></figure>
+
+<p>内核源码中还存在其他定义等待队列元素的方式，调用宏定义 DEFINE_WAIT(name) 和 init_wait(&amp;wait_queue) 。</p>
+<p>这两种方式都将当前进程(current)关联到所定义的等待队列上，唤醒函数为 autoremove_wake_function() ，注意此函数与上述宏定义方式时不同（上述定义中使用 default_wake_function() ）。</p>
+<p>下文也将介绍 DEFINE_WAIT() 和 DECLARE_WAITQUEUE() 在使用场合上的不同。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEFINE_WAIT(name)   DEFINE_WAIT_FUNC(name, autoremove_wake_function)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEFINE_WAIT_FUNC(name, function)                    \</span><br><span class="hljs-meta">    struct wait_queue_entry name = &#123;                        \</span><br><span class="hljs-meta">        .private    = current,                              \</span><br><span class="hljs-meta">        .func       = function,                             \</span><br><span class="hljs-meta">        .entry      = LIST_HEAD_INIT((name).entry),         \</span><br><span class="hljs-meta">    &#125;</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> init_wait(wait)                                     \</span><br><span class="hljs-meta">    do &#123;                                                    \</span><br><span class="hljs-meta">        (wait)-&gt;private = current;                          \</span><br><span class="hljs-meta">        (wait)-&gt;func = autoremove_wake_function;            \</span><br><span class="hljs-meta">        INIT_LIST_HEAD(&amp;(wait)-&gt;entry);                     \</span><br><span class="hljs-meta">        (wait)-&gt;flags = 0;                                  \</span><br><span class="hljs-meta">    &#125; while (0)</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="五、添加和移除等待队列"><a href="#五、添加和移除等待队列" class="headerlink" title="五、添加和移除等待队列"></a>五、添加和移除等待队列</h3><p>内核提供了两个函数（定义在 kernel&#x2F;sched&#x2F;wait.c ）用于将等待队列元素 wq_entry 添加到等待队列 wq_head 中： add_wait_queue() 和 add_wait_queue_exclusive() 。</p>
+<p> add_wait_queue() ：在等待队列头部添加普通的等待队列元素（非独占等待，清除 WQ_FLAG_EXCLUSIVE 标志）。</p>
+<p> add_wait_queue_exclusive() ：在等待队列尾部添加独占等待队列元素（设置了 WQ_FLAG_EXCLUSIVE 标志）。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">add_wait_queue</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry)</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> flags;<br>    <span class="hljs-comment">// 清除WQ_FLAG_EXCLUSIVE标志</span><br>    wq_entry-&gt;flags &amp;= ~WQ_FLAG_EXCLUSIVE;<br>    spin_lock_irqsave(&amp;wq_head-&gt;lock, flags);<br>    __add_wait_queue(wq_head, wq_entry);<br>    spin_unlock_irqrestore(&amp;wq_head-&gt;lock, flags);<br>&#125;   <br><br><span class="hljs-type">static</span> <span class="hljs-keyword">inline</span> <span class="hljs-type">void</span> __add_wait_queue(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry)<br>&#123;<br>    list_add(&amp;wq_entry-&gt;entry, &amp;wq_head-&gt;head);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">add_wait_queue_exclusive</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry)</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> flags;<br>    <span class="hljs-comment">// 设置WQ_FLAG_EXCLUSIVE标志</span><br>    wq_entry-&gt;flags |= WQ_FLAG_EXCLUSIVE;<br>    spin_lock_irqsave(&amp;wq_head-&gt;lock, flags);<br>    __add_wait_queue_entry_tail(wq_head, wq_entry);<br>    spin_unlock_irqrestore(&amp;wq_head-&gt;lock, flags);<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-keyword">inline</span> <span class="hljs-type">void</span> __add_wait_queue_entry_tail(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry)<br>&#123;<br>    list_add_tail(&amp;wq_entry-&gt;entry, &amp;wq_head-&gt;head);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>remove_wait_queue() 函数用于将等待队列元素 wq_entry 从等待队列 wq_head 中移除。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">remove_wait_queue</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry)</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> flags;<br>    spin_lock_irqsave(&amp;wq_head-&gt;lock, flags);<br>    __remove_wait_queue(wq_head, wq_entry);<br>    spin_unlock_irqrestore(&amp;wq_head-&gt;lock, flags);<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-keyword">inline</span> <span class="hljs-type">void</span><br>__remove_wait_queue(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry)<br>&#123;<br>    list_del(&amp;wq_entry-&gt;entry);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>添加和移除等待队列的示意图如下所示：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://raw.githubusercontent.com/mengchao666/picture/main/blogblog2f3220332bf3f6b8af6038fe1003a5c8.png"></p>
+<h3 id="六、等待事件"><a href="#六、等待事件" class="headerlink" title="六、等待事件"></a>六、等待事件</h3><p>内核中提供了等待事件 wait_event() 宏（以及它的几个变种），可用于实现简单的进程休眠，等待直至某个条件成立，主要包括如下几个定义：</p>
+<p>wait_event(wq_head, condition)<br>wait_event_timeout(wq_head, condition, timeout)<br>wait_event_interruptible(wq_head, condition)<br>wait_event_interruptible_timeout(wq_head, condition, timeout)<br>io_wait_event(wq_head, condition)</p>
+<p>上述所有形式函数中， wq_head 是等待队列头（采用”值传递“的方式传输函数）， condition 是任意一个布尔表达式。使用 wait_event ，进程将被置于非中断休眠，而使用 wait_event_interruptible 时，进程可以被信号中断。</p>
+<p>另外两个版本 wait_event_timeout 和 wait_event_interruptible_timeout 会使进程只等待限定的时间（以jiffy表示，给定时间到期时，宏均会返回0，而无论 condition 为何值）。</p>
+<p>详细介绍 wait_event() 函数的实现原理。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> wait_event(wq_head, condition)                      \</span><br><span class="hljs-meta">    do &#123;                                                    \</span><br><span class="hljs-meta">        might_sleep();                                      \</span><br><span class="hljs-meta">        <span class="hljs-comment">// 如果condition满足，提前返回                       \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        if (condition)                                      \</span></span><br><span class="hljs-comment"><span class="hljs-meta">           break;                                           \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        __wait_event(wq_head, condition);                   \</span></span><br><span class="hljs-comment"><span class="hljs-meta">    &#125; while (0)</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __wait_event(wq_head, condition)                    \</span><br><span class="hljs-meta">     (void)___wait_event(wq_head, condition, TASK_UNINTERRUPTIBLE, 0, 0, schedule())</span><br><br><span class="hljs-comment">/* 定义等待队列元素，并将元素加入到等待队列中</span><br><span class="hljs-comment"> * 循环判断等待条件condition是否满足，若条件满足，或者接收到中断信号，等待结束，函数返回</span><br><span class="hljs-comment"> * 若condition满足，返回0；否则返回-ERESTARTSYS</span><br><span class="hljs-comment"> */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ___wait_event(wq_head, condition, state, exclusive, ret, cmd)       \</span><br><span class="hljs-meta">(&#123;                                                          \</span><br><span class="hljs-meta">     __label__ __out;                                       \</span><br><span class="hljs-meta">     struct wait_queue_entry __wq_entry;                    \</span><br><span class="hljs-meta">     long __ret = ret;          <span class="hljs-comment">/* explicit shadow */</span>       \</span><br><span class="hljs-meta">                                                            \</span><br><span class="hljs-meta">     <span class="hljs-comment">// 初始化等待队列元素__wq_entry，关联当前进程，根据exclusive参数初始化属性标志 \</span></span><br><span class="hljs-comment"><span class="hljs-meta">     // 唤醒函数为autoremove_wake_function()                                        \</span></span><br><span class="hljs-comment"><span class="hljs-meta">     init_wait_entry(&amp;__wq_entry, exclusive ? WQ_FLAG_EXCLUSIVE : 0);    \</span></span><br><span class="hljs-comment"><span class="hljs-meta">     // 等待事件循环                                        \</span></span><br><span class="hljs-comment"><span class="hljs-meta">     for (;;) &#123;                                             \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        // 如果进程可被信号中断并且刚好有信号挂起，返回-ERESTARTSYS     \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        // 否则，将等待队列元素加入等待队列，并且设置进程状态，返回0    \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        long __int = prepare_to_wait_event(&amp;wq_head, &amp;__wq_entry, state);\</span></span><br><span class="hljs-comment"><span class="hljs-meta">                                                           \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        // 当前进程让出调度器前，判断condition是否成立。若成立，提前结束，后续将返回0   \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        if (condition)                                      \</span></span><br><span class="hljs-comment"><span class="hljs-meta">            break;                                          \</span></span><br><span class="hljs-comment"><span class="hljs-meta">                                                            \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        // 当前进程让出调度器前，判断当前进程是否接收到中断信号（或KILL信号）       \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        // 如果成立，将提前返回-ERESTARTSYS                 \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        if (___wait_is_interruptible(state) &amp;&amp; __int) &#123;     \</span></span><br><span class="hljs-comment"><span class="hljs-meta">            __ret = __int;                                  \</span></span><br><span class="hljs-comment"><span class="hljs-meta">            goto __out;                                     \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        &#125;                                                   \</span></span><br><span class="hljs-comment"><span class="hljs-meta">                                                           \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        // 此处实际执行schedule()，当前进程让出调度器       \</span></span><br><span class="hljs-comment"><span class="hljs-meta">        cmd;                                                \</span></span><br><span class="hljs-comment"><span class="hljs-meta">     &#125;                                                      \</span></span><br><span class="hljs-comment"><span class="hljs-meta"></span></span><br>     <span class="hljs-comment">// 设置进程为可运行状态，并且将等待队列元素从等待队列中删除    \</span><br><span class="hljs-comment">     finish_wait(&amp;wq_head, &amp;__wq_entry);                    \</span><br><span class="hljs-comment">     __out:  __ret;                                         \</span><br><span class="hljs-comment">&#125;)  </span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_wait_entry</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry, <span class="hljs-type">int</span> flags)</span> <br>&#123;<br>    wq_entry-&gt;flags = flags;<br>    wq_entry-&gt;private = current;<br>    wq_entry-&gt;func = autoremove_wake_function;<br>    INIT_LIST_HEAD(&amp;wq_entry-&gt;entry);<br>&#125;<br><br><span class="hljs-type">long</span> <span class="hljs-title function_">prepare_to_wait_event</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry, <span class="hljs-type">int</span> state)</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> flags;<br>    <span class="hljs-type">long</span> ret = <span class="hljs-number">0</span>;<br>    spin_lock_irqsave(&amp;wq_head-&gt;lock, flags);<br>    <span class="hljs-comment">// 返回非0值条件：可被信号中断并且确实有信号挂起</span><br>    <span class="hljs-keyword">if</span> (signal_pending_state(state, current)) &#123;<br>        <span class="hljs-comment">// 将等待队列元素从等待队列中删除，返回-ERESTARTSYS</span><br>        list_del_init(&amp;wq_entry-&gt;entry);<br>        ret = -ERESTARTSYS;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">// 判断wq_entry-&gt;entry是否为空，即等待队列元素是否已经被添加到等待队列中</span><br>        <span class="hljs-keyword">if</span> (list_empty(&amp;wq_entry-&gt;entry)) &#123;<br>            <span class="hljs-comment">// WQ_FLAG_EXCLUSIVE标志被设置时，将等待队列元素添加到等待队列尾部（独占等待）</span><br>            <span class="hljs-comment">// 否则，将等待队列元素添加到等待队列头部。同2.1中对WQ_FLAG_EXCLUSIVE标志介绍。</span><br>            <span class="hljs-keyword">if</span> (wq_entry-&gt;flags &amp; WQ_FLAG_EXCLUSIVE)<br>                __add_wait_queue_entry_tail(wq_head, wq_entry);<br>            <span class="hljs-keyword">else</span><br>                __add_wait_queue(wq_head, wq_entry);<br>        &#125;<br>        <span class="hljs-comment">// 改变当前进程的状态</span><br>        set_current_state(state);<br>    &#125;<br>    spin_unlock_irqrestore(&amp;wq_head-&gt;lock, flags);<br>    <span class="hljs-keyword">return</span> ret;<br>&#125;<br><br><span class="hljs-comment">// 用state_value改变当前的进程状态，并且执行了一次内存屏障</span><br><span class="hljs-comment">// 注意，只是改变了调度器处理该进程的方式，但尚未使该进程让出处理器</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> set_current_state(state_value)              \</span><br><span class="hljs-meta">    do &#123;                            \</span><br><span class="hljs-meta">        WARN_ON_ONCE(is_special_task_state(state_value));\</span><br><span class="hljs-meta">        current-&gt;task_state_change = _THIS_IP_;     \</span><br><span class="hljs-meta">        smp_store_mb(current-&gt;state, (state_value));    \</span><br><span class="hljs-meta">    &#125; while (0)</span><br><br><span class="hljs-comment">/*  设置进程为可运行状态，并且将等待队列元素从等待队列中删除  */</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">finish_wait</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry)</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> flags;<br>    <span class="hljs-comment">// 将当前进程状态改为可运行状态(TASK_RUNNING)</span><br>    <span class="hljs-comment">// 类似set_current_state()，差别在于未进行内存屏障</span><br>    __set_current_state(TASK_RUNNING);<br>    <span class="hljs-comment">// 等待队列元素若仍在等待队列中，则将其删除</span><br>    <span class="hljs-keyword">if</span> (!list_empty_careful(&amp;wq_entry-&gt;entry)) &#123;<br>        spin_lock_irqsave(&amp;wq_head-&gt;lock, flags);<br>        list_del_init(&amp;wq_entry-&gt;entry);<br>        spin_unlock_irqrestore(&amp;wq_head-&gt;lock, flags);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>经过源码分析可以看到， wait_event 使进程进入非中断休眠状态，循环等待直至特定条件满足，否则进程继续保持休眠状态。</p>
+<p>可以简单总结出使用等待队列使进程休眠的一般步骤：</p>
+<ul>
+<li>将当前进程关联的等待队列元素加入到等待队列中。 __add_wait_queue()&#x2F;__add_wait_queue_entry_tail()</li>
+<li>设置当前进程状态（可中断 TASK_INTERRUPTIBLE 或不可中断 TASK_UNINTERRUPTIBLE）。 set_current_state()</li>
+<li>判断资源是否得到，或是否捕获中断信号。</li>
+<li>进程让出调度器，进入休眠状态。 schedule()</li>
+<li>资源得到满足时，将等待队列元素从等待队列中移除。</li>
+</ul>
+<h3 id="七、等待队列唤醒"><a href="#七、等待队列唤醒" class="headerlink" title="七、等待队列唤醒"></a>七、等待队列唤醒</h3><p>前文已经简单提到， wake_up 函数可用于将等待队列上的所有进程唤醒，和 wait_event 相对应， wake_up 函数也包括多个变体。主要包括：</p>
+<p>wake_up(&amp;wq_head)<br>wake_up_interruptible(&amp;wq_head)<br>wake_up_nr(&amp;wq_head, nr)<br>wake_up_interruptible_nr(&amp;wq_head, nr)<br>wake_up_interruptible_all(&amp;wq_head)</p>
+<h4 id="wake-up"><a href="#wake-up" class="headerlink" title="wake_up()"></a>wake_up()</h4><p> wake_up() 可以用来唤醒等待队列上的所有进程，而 wake_up_interruptible() 只会唤醒那些执行可中断休眠的进程。因此约定， wait_event() 和 wake_up() 搭配使用，而 wait_event_interruptible() 和 wake_up_interruptible() 搭配使用。</p>
+<p>前文提到，对于独占等待的进程， wake_up() 只会唤醒第一个独占等待进程。 wake_up_nr() 函数提供功能，它能唤醒给定数目nr个独占等待进程，而不是只有一个。</p>
+<p> wake_up() 函数的实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> TASK_NORMAL         (TASK_INTERRUPTIBLE | TASK_UNINTERRUPTIBLE)</span><br><span class="hljs-comment">// 可以看出wake_up函数将唤醒TASK_INTERRUPTIBLE和TASK_UNINTERRUPTIBLE的所有进程</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> wake_up(x)          __wake_up(x, TASK_NORMAL, 1, NULL)</span><br><span class="hljs-type">void</span> __wake_up(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> mode, <span class="hljs-type">int</span> nr_exclusive, <span class="hljs-type">void</span> *key)<br>&#123;<br>    __wake_up_common_lock(wq_head, mode, nr_exclusive, <span class="hljs-number">0</span>, key);<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> __wake_up_common_lock(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> mode,<br>        <span class="hljs-type">int</span> nr_exclusive, <span class="hljs-type">int</span> wake_flags, <span class="hljs-type">void</span> *key)<br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> flags;<br>    <span class="hljs-type">wait_queue_entry_t</span> bookmark;<br>    bookmark.flags = <span class="hljs-number">0</span>;<br>    bookmark.private = <span class="hljs-literal">NULL</span>;<br>    bookmark.func = <span class="hljs-literal">NULL</span>;<br>    INIT_LIST_HEAD(&amp;bookmark.entry);<br>    <span class="hljs-comment">// 第一次尝试调用__wake_up_common()，如果需要进行BOOKMARK过程，bookmark.flags会被置为WQ_FLAG_BOOKMARK</span><br>    spin_lock_irqsave(&amp;wq_head-&gt;lock, flags);<br>    nr_exclusive = __wake_up_common(wq_head, mode, nr_exclusive, wake_flags, key, &amp;bookmark);<br>    spin_unlock_irqrestore(&amp;wq_head-&gt;lock, flags);<br>    <span class="hljs-comment">// 如果还有需要处理的元素，那么bookmark.flags肯定置上WQ_FLAG_BOOKMARK；否则，在一个loop内便处理完成</span><br>    <span class="hljs-keyword">while</span> (bookmark.flags &amp; WQ_FLAG_BOOKMARK) &#123;<br>        spin_lock_irqsave(&amp;wq_head-&gt;lock, flags);<br>        nr_exclusive = __wake_up_common(wq_head, mode, nr_exclusive, wake_flags, key, &amp;bookmark);<br>        spin_unlock_irqrestore(&amp;wq_head-&gt;lock, flags);<br>    &#125;<br>&#125;<br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> WAITQUEUE_WALK_BREAK_CNT 64</span><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> __wake_up_common(<span class="hljs-keyword">struct</span> wait_queue_head *wq_head, <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> mode,<br>        <span class="hljs-type">int</span> nr_exclusive, <span class="hljs-type">int</span> wake_flags, <span class="hljs-type">void</span> *key, <span class="hljs-type">wait_queue_entry_t</span> *bookmark)<br>&#123;<br>    <span class="hljs-type">wait_queue_entry_t</span> *curr, *next;<br>    <span class="hljs-type">int</span> cnt = <span class="hljs-number">0</span>;<br>    <span class="hljs-comment">// 判断自旋锁已经被持有</span><br>    lockdep_assert_held(&amp;wq_head-&gt;lock);<br>    <span class="hljs-comment">// 如果bookmark元素中标志`WQ_FLAG_BOOKMARK`已被设置，则curr被设置为bookmark下一个元素</span><br>    <span class="hljs-comment">// 同时将bookmark从等待队列中删除，bookmark-&gt;flags清零</span><br>    <span class="hljs-comment">// 否则，curr设置为等待队列wq_head的第一个元素（实际上为第一次调用__wake_up_common）</span><br>    <span class="hljs-keyword">if</span> (bookmark &amp;&amp; (bookmark-&gt;flags &amp; WQ_FLAG_BOOKMARK)) &#123;<br>        curr = list_next_entry(bookmark, entry);<br>        list_del(&amp;bookmark-&gt;entry);<br>        bookmark-&gt;flags = <span class="hljs-number">0</span>;<br>    &#125; <span class="hljs-keyword">else</span><br>        curr = list_first_entry(&amp;wq_head-&gt;head, <span class="hljs-type">wait_queue_entry_t</span>, entry);<br>    <span class="hljs-keyword">if</span> (&amp;curr-&gt;entry == &amp;wq_head-&gt;head)<br>        <span class="hljs-keyword">return</span> nr_exclusive;<br>    <span class="hljs-comment">// 在等待队列头指向的链表上，从curr指向的元素开始依次遍历元素</span><br>    list_for_each_entry_safe_from(curr, next, &amp;wq_head-&gt;head, entry) &#123;<br>        <span class="hljs-type">unsigned</span> flags = curr-&gt;flags;<br>        <span class="hljs-type">int</span> ret;<br>        <span class="hljs-comment">// 跳过标记为WQ_FLAG_BOOKMARK的元素，等待队列元素被置上WQ_FLAG_BOOKMARK？</span><br>        <span class="hljs-keyword">if</span> (flags &amp; WQ_FLAG_BOOKMARK)<br>            <span class="hljs-keyword">continue</span>;<br>        <span class="hljs-comment">// 调用等待队列元素绑定的唤醒回调函数</span><br>        <span class="hljs-comment">// 注意，具体唤醒何种进程(TASK_INTERRUPTIBLE/TASK_UNINTERRUPTIBLE)，作为参数传递给唤醒函数处理</span><br>        <span class="hljs-comment">// 当进程不符合唤醒条件时，ret为0，详见try_to_wake_up()</span><br>        ret = curr-&gt;func(curr, mode, wake_flags, key);<br>        <span class="hljs-keyword">if</span> (ret &lt; <span class="hljs-number">0</span>)<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-comment">// 如果当前等待队列元素为独占等待，并且独占等待个数已经等于nr_exclusive，提前退出循环</span><br>        <span class="hljs-comment">// 如2.1所述，独占等待进程被加入到等待队列的尾部，因此此时表明所有唤醒工作已经完成</span><br>        <span class="hljs-keyword">if</span> (ret &amp;&amp; (flags &amp; WQ_FLAG_EXCLUSIVE) &amp;&amp; !--nr_exclusive)<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-comment">// 连续唤醒的进程数目达到指定数目WAITQUEUE_WALK_BREAK_CNT（仍有进程元素需要处理），</span><br>        <span class="hljs-comment">// 标记bookmark-&gt;flags为WQ_FLAG_BOOKMARK，同时将下一个要处理的元素添加到bookmark作为头节点的链表尾部，并退出遍历循环</span><br>        <span class="hljs-comment">// 通过这种机制，实现了进程分批次唤醒，避免了等待队列中自旋锁被持有时间过长</span><br>        <span class="hljs-keyword">if</span> (bookmark &amp;&amp; (++cnt &gt; WAITQUEUE_WALK_BREAK_CNT) &amp;&amp;<br>                (&amp;next-&gt;entry != &amp;wq_head-&gt;head)) &#123;<br>            bookmark-&gt;flags = WQ_FLAG_BOOKMARK;<br>            list_add_tail(&amp;bookmark-&gt;entry, &amp;next-&gt;entry);<br>            <span class="hljs-keyword">break</span>;<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> nr_exclusive;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>wake_up() 函数会遍历等待队列上的所有元素（包括TASK_INTERRUPTIBLE和TASK_UNINTERRUPTIBLE)），根据 nr_exclusive 参数的要求唤醒进程，同时实现了分批次唤醒工作。最终会回调等待队列元素所绑定的唤醒函数。</p>
+<p>前文已经提到，定义等待队列元素时主要涉及到两种唤醒回调函数：</p>
+<ul>
+<li><p>default_wake_function() ：宏定义 DECLARE_WAITQUEUE(name, tsk) 使用的唤醒函数。</p>
+</li>
+<li><p>autoremove_wake_function() ： DEFINE_WAIT(name) ， init_wait(wait) 和 wait_event() 中调用的 init_wait_entry() 使用此唤醒函数。</p>
+</li>
+</ul>
+<h4 id="default-wake-function"><a href="#default-wake-function" class="headerlink" title="default_wake_function()"></a>default_wake_function()</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">default_wake_function</span><span class="hljs-params">(<span class="hljs-type">wait_queue_entry_t</span> *curr, <span class="hljs-type">unsigned</span> mode, <span class="hljs-type">int</span> wake_flags, <span class="hljs-type">void</span> *key)</span><br>&#123;<br>    <span class="hljs-keyword">return</span> try_to_wake_up(curr-&gt;private, mode, wake_flags);<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">int</span><br><span class="hljs-title function_">try_to_wake_up</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct *p, <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> state, <span class="hljs-type">int</span> wake_flags)</span><br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> flags;<br>    <span class="hljs-type">int</span> cpu, success = <span class="hljs-number">0</span>;<br>    raw_spin_lock_irqsave(&amp;p-&gt;pi_lock, flags);<br>    smp_mb__after_spinlock();<br>    <span class="hljs-comment">// 此处对进程的状态进行筛选，跳过不符合状态的进程（TASK_INTERRUPTIBLE/TASK_UNINTERRUPTIBLE）</span><br>    <span class="hljs-keyword">if</span> (!(p-&gt;state &amp; state))<br>        <span class="hljs-keyword">goto</span> out;<br>    trace_sched_waking(p);<br>    <span class="hljs-comment">/* We&#x27;re going to change -&gt;state: */</span><br>    success = <span class="hljs-number">1</span>;<br>    cpu = task_cpu(p);<br>    smp_rmb();<br>    <span class="hljs-keyword">if</span> (p-&gt;on_rq &amp;&amp; ttwu_remote(p, wake_flags))<br>        <span class="hljs-keyword">goto</span> stat;<br>    ... ...<br>    <span class="hljs-comment">// Try-To-Wake-Up</span><br>    ttwu_queue(p, cpu, wake_flags);<br>stat:<br>    ttwu_stat(p, cpu, wake_flags);<br>out:<br>    raw_spin_unlock_irqrestore(&amp;p-&gt;pi_lock, flags);<br>    <span class="hljs-keyword">return</span> success;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">ttwu_queue</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct *p, <span class="hljs-type">int</span> cpu, <span class="hljs-type">int</span> wake_flags)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">rq</span> *<span class="hljs-title">rq</span> =</span> cpu_rq(cpu);<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">rq_flags</span> <span class="hljs-title">rf</span>;</span><br>    ... ...<br>    rq_lock(rq, &amp;rf);<br>    update_rq_clock(rq);<br>    ttwu_do_activate(rq, p, wake_flags, &amp;rf);<br>    rq_unlock(rq, &amp;rf);<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span><br><span class="hljs-title function_">ttwu_do_activate</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> rq *rq, <span class="hljs-keyword">struct</span> task_struct *p, <span class="hljs-type">int</span> wake_flags,</span><br><span class="hljs-params">        <span class="hljs-keyword">struct</span> rq_flags *rf)</span><br>&#123;<br>    <span class="hljs-type">int</span> en_flags = ENQUEUE_WAKEUP | ENQUEUE_NOCLOCK;<br>    lockdep_assert_held(&amp;rq-&gt;lock);<br>    ... ...<br>    activate_task(rq, p, en_flags);<br>    ttwu_do_wakeup(rq, p, wake_flags, rf);<br>&#125;<br><br><span class="hljs-comment">/*</span><br><span class="hljs-comment"> * Mark the task runnable and perform wakeup-preemption.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">ttwu_do_wakeup</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> rq *rq, <span class="hljs-keyword">struct</span> task_struct *p, <span class="hljs-type">int</span> wake_flags,</span><br><span class="hljs-params">        <span class="hljs-keyword">struct</span> rq_flags *rf)</span><br>&#123;<br>    check_preempt_curr(rq, p, wake_flags);<br>    p-&gt;state = TASK_RUNNING;<br>    trace_sched_wakeup(p);<br>    ... ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>从函数调用过程中可以看到， default_wake_function() 实现唤醒进程的过程为：</p>
+<p>default_wake_function() –&gt; try_to_wake_up() –&gt; ttwu_queue() –&gt; ttwu_do_activate() –&gt; ttwu_do_wakeup()</p>
+<p>值得一提的是， default_wake_function() 的实现中并未将等待队列元素从等待队列中删除。因此，编写程序时不能忘记添加步骤将等待队列元素从等待队列元素中删除。</p>
+<h4 id="autoremove-wake-function"><a href="#autoremove-wake-function" class="headerlink" title="autoremove_wake_function()"></a>autoremove_wake_function()</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">autoremove_wake_function</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> wait_queue_entry *wq_entry, <span class="hljs-type">unsigned</span> mode, <span class="hljs-type">int</span> sync, <span class="hljs-type">void</span> *key)</span><br>&#123;<br>    <span class="hljs-type">int</span> ret = default_wake_function(wq_entry, mode, sync, key);<br>    <span class="hljs-keyword">if</span> (ret)<br>        list_del_init(&amp;wq_entry-&gt;entry);<br>    <span class="hljs-keyword">return</span> ret;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>autoremove_wake_function() 相比于 default_wake_function() ，在成功执行进程唤醒工作后，会自动将等待队列元素从等待队列中移除。</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/posts/module-init%E5%AE%8F%E8%AF%A6%E8%A7%A3-insmod%E6%B5%81%E7%A8%8B-THIS-MODULE.html">module_init宏详解&insmod流程&THIS_MODULE</a></div></section></div>
+
+<div class="related-wrap" id="related-posts">
+    <section class='header'>
+      <div class='title cap theme'>您可能感兴趣的文章</div>
+    </section>
+    <section class='body'>
+    <div class="related-posts"><a class="item" href="\posts\DTS设备树.html" title="DTS设备树"><span class="title">DTS设备树</span></a><a class="item" href="\posts\Linux内核的initcall机制.html" title="Linux内核的initcall机制"><span class="title">Linux内核的initcall机制</span></a><a class="item" href="\posts\module-init宏详解-insmod流程-THIS-MODULE.html" title="module_init宏详解&insmod流程&THIS_MODULE"><span class="title">module_init宏详解&insmod流程&THIS_MODULE</span></a><a class="item" href="\posts\offset-of和container-of宏.html" title="offset_of和container_of宏"><span class="title">offset_of和container_of宏</span></a><a class="item" href="\posts\中断下半部-tasklet.html" title="中断下半部-tasklet"><span class="title">中断下半部-tasklet</span></a></div></section></div>
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/topic/">专栏</a><a href="/archives/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/mengchao666/Linux-0.11code">Linux 0.11</a></div><div class="sitemap-group"><span class="fs15">探索</span><a href="/explore/sites/%E5%B7%A5%E5%85%B7%E5%BA%93.html">站点</a><a href="/explore/notes/%E6%8E%A2%E7%B4%A2%E8%80%85%E7%AC%94%E8%AE%B0.html">笔记</a></div><div class="sitemap-group"><span class="fs15">友链</span><a href="/about/">朋友圈</a></div></div><div class="text"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/assets/images/keyboard.jpg" alt="描述文字" style="float: right; width: 60px; margin-left: 20px;">
+<center>
+  <div>
+    <div>
+      © 2024
+      <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com">mengchao666</a>
+      开心地使用 <a style="font-weight: bold;  auto;" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/xaoxuu/hexo-theme-stellar">Stellar</a>
+      主题，星际地球第<span id="runtime_span"></span>
+    </div>
+    <script type="text/javascript">
+      function show_runtime() {
+          window.setTimeout("show_runtime()", 1000);
+          X = new Date("08/18/2024 00:00:00");
+          Y = new Date();
+          T = (Y.getTime() - X.getTime());
+          M = 24 * 60 * 60 * 1000;
+          a = T / M;
+          A = Math.floor(a);
+          runtime_span.innerHTML = A + "天"
+      }
+      show_runtime();
+    </script>
+  </div>
+</center>
+<div class="totalcount" style="text-align:center">收集了 54 颗星星 ✧ </span><span class="post-count">共 83.3k 粒星尘，好像写完一本 鲁迅 的《呐喊》了啊</div></div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="true"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81Linux%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97%E6%A6%82%E8%BF%B0"><span class="toc-text">一、Linux等待队列概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97%E5%A4%B4%E5%92%8C%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97%E5%85%83%E7%B4%A0"><span class="toc-text">二、等待队列头和等待队列元素</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81-%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97%E7%9A%84%E5%88%9B%E5%BB%BA%E5%92%8C%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">三、 等待队列的创建和初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97%E5%85%83%E7%B4%A0%E7%9A%84%E5%88%9B%E5%BB%BA%E5%92%8C%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">四、等待队列元素的创建和初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%B7%BB%E5%8A%A0%E5%92%8C%E7%A7%BB%E9%99%A4%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97"><span class="toc-text">五、添加和移除等待队列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%AD%89%E5%BE%85%E4%BA%8B%E4%BB%B6"><span class="toc-text">六、等待事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97%E5%94%A4%E9%86%92"><span class="toc-text">七、等待队列唤醒</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#wake-up"><span class="toc-text">wake_up()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#default-wake-function"><span class="toc-text">default_wake_function()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#autoremove-wake-function"><span class="toc-text">autoremove_wake_function()</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+
+
+  <widget class="widget-wrapper categories-widget">
+    <div class="widget-header categories-header dis-select">
+      <span class="name">分类索引</span>
+    </div>
+    <div class='post-list'>
+      <article class='' id='cats'>
+        
+          <div>
+            <a class="cat" href="/categories/C%E8%AF%AD%E8%A8%80/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>C语言</span>
+              <span class='badge'>(11)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux</span>
+              <span class='badge'>(3)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Linux%E5%B7%A5%E5%85%B7/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Linux工具</span>
+              <span class='badge'>(15)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/Makefile/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>Makefile</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/dm-verity/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>dm-verity</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/git/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>git</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/kernel/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>kernel</span>
+              <span class='badge'>(17)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E4%BA%8C%E5%8F%89%E6%A0%91/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>二叉树</span>
+              <span class='badge'>(4)</span>
+            </a>
+          </div>
+        
+          <div>
+            <a class="cat" href="/categories/%E7%BD%91%E7%AB%99/">
+              <span class='name'><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg>网站</span>
+              <span class='badge'>(1)</span>
+            </a>
+          </div>
+        
+      </article>
+    </div>
+  </widget>
+
+
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"codeblock":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'light'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"twikoo":{"js":"/js/services/twikoo_new.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+
+
+
+<!-- inject -->
+<script src="/js/custom.js"></script><script src="/js/code-block.js"></script><script src="https://cdn.jsdelivr.net/gh/huangwb8/bloghelper@latest/js/input-with-fire.js"></script><script src="https://cdn.staticfile.org/jquery/3.6.3/jquery.min.js"></script><script src="/static/js/snow.js"></script>
+</div><!-- hexo injector body_end start -->
+  <script>
+    mediumZoom(".l_body .content p img", { background: "var(--site-bg)" })
+  </script>
+  <!-- hexo injector body_end end --></body></html>
+<script>var posts=["posts/94、二叉树的中序遍历.html","posts/DTS设备树.html","posts/Linux内核的initcall机制.html","posts/Makefile基础语法.html","posts/addr2line.html","posts/98、验证二叉搜索树.html","posts/96、不同的二叉搜索树.html","posts/dd命令.html","posts/find.html","posts/dm-verity.html","posts/OOM.html","posts/grep.html","posts/gtest.html","/posts/1.html","posts/module-init宏详解-insmod流程-THIS-MODULE.html","posts/ftpget.html","posts/mmap.html","posts/objdump.html","posts/poll、epoll.html","posts/offset-of和container-of宏.html","posts/readelf.html","posts/objcopy.html","posts/scp.html","posts/nm.html","posts/sed.html","posts/tar.html","posts/tcpdump.html","posts/中断下半部-tasklet.html","posts/中断下半部-workqueue.html","posts/proc目录下pid各文件目录含义.html","posts/互斥锁、信号量、原子操作、自旋锁.html","posts/使用proc和sysfs文件系统.html","posts/二叉树算法核心纲领.html","posts/top.html","posts/内核内存申请函数.html","posts/内存申请函数.html","posts/内存检测工具.html","posts/内核定时器-hrtime高精度定时器.html","posts/内核链表.html","posts/内核队列.html","posts/内核调试.html","posts/动态链接库、静态链接库.html","posts/字符串函数.html","posts/指针.html","posts/内核线程.html","posts/系统调用流程.html","posts/等待队列.html","posts/红黑树.html","posts/网站部署-写作.html","posts/线程.html","posts/进程间通信.html","posts/查找内核符号.html","posts/锁、信号量.html","posts/预处理、编译、汇编、链接.html"];function toRandomPost(){ window.location.href = window.location.origin + posts[Math.floor(Math.random()*posts.length)]; };</script>
